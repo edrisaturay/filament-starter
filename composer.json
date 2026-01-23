@@ -1,0 +1,30 @@
+{
+    "name": "raison/filament-starter",
+    "description": "A reusable Filament starter package.",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Edrisa",
+            "email": "edrisa@raison.africa"
+        }
+    ],
+    "require": {
+        "php": "^8.3",
+        "filament/filament": "^3.0|^4.0|^5.0",
+        "laravel/framework": "^11.0|^12.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Raison\\FilamentStarter\\": "src/",
+            "Raison\\FilamentStarter\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Raison\\FilamentStarter\\StarterServiceProvider"
+            ]
+        }
+    }
+}
