@@ -19,8 +19,18 @@ use ShuvroRoy\FilamentSpatieLaravelHealth\FilamentSpatieLaravelHealthPlugin;
 use Tapp\FilamentAuthenticationLog\FilamentAuthenticationLogPlugin;
 use WatheqAlshowaiter\FilamentStickyTableHeader\StickyTableHeaderPlugin;
 
+/**
+ * Class PluginRegistry
+ *
+ * Central registry for all managed Filament plugins in the starter kit.
+ */
 class PluginRegistry
 {
+    /**
+     * Get the list of managed plugins and their configurations.
+     *
+     * @return array<string, array<string, mixed>>
+     */
     public static function getPlugins(): array
     {
         return [
@@ -209,9 +219,22 @@ class PluginRegistry
                 'class' => 'STS\FilamentImpersonate\FilamentImpersonateServiceProvider',
                 'package' => 'stechstudio/filament-impersonate',
             ],
+            'filament-progress-bar-column' => [
+                'label' => 'Progress Bar Column',
+                'installer' => fn (Panel $panel, array $options) => $panel, // Registered as package in composer
+                'default_enabled' => true,
+                'dangerous_to_disable' => false,
+                'requires_migrations' => false,
+                'default_options' => [],
+                'class' => 'Tapp\FilamentProgressBarColumn\FilamentProgressBarColumnServiceProvider',
+                'package' => 'tapp/filament-progress-bar-column',
+            ],
         ];
     }
 
+    /**
+     * Determine if a plugin is dangerous to disable.
+     */
     public static function isDangerous(?string $key): bool
     {
         if (! $key) {

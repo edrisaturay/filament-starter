@@ -1,0 +1,73 @@
+{
+    "name": "rickdbcn/filament-email",
+    "description": "Log all outbound emails you send through your Filament application",
+    "keywords": [
+        "RickDBCN",
+        "laravel",
+        "filament-email",
+        "marcogermani87"
+    ],
+    "homepage": "https://github.com/rickdbcn/filament-email",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Rick de Boer",
+            "email": "rickdb@calvintijd.nl",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^8.3",
+        "filament/filament": "^4.0|^5.0",
+        "illuminate/contracts": "^11.0|^12.0",
+        "laravel/framework": "^11.0|^12.0",
+        "spatie/laravel-package-tools": "^1.16.0",
+        "malzariey/filament-daterangepicker-filter": "^4.0"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.25",
+        "nunomaduro/collision": "^8.0",
+        "orchestra/testbench": "^10.0",
+        "pestphp/pest": "^4.1",
+        "pestphp/pest-plugin-arch": "^4.0",
+        "pestphp/pest-plugin-laravel": "^4.0",
+        "pestphp/pest-plugin-livewire": "^4.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "RickDBCN\\FilamentEmail\\": "src/",
+            "RickDBCN\\FilamentEmail\\Database\\Factories\\": "database/factories/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "RickDBCN\\FilamentEmail\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "post-autoload-dump": "@php ./vendor/bin/testbench package:discover --ansi",
+        "analyse": "vendor/bin/phpstan analyse",
+        "test": "vendor/bin/pest",
+        "test-coverage": "vendor/bin/pest --coverage",
+        "format": "vendor/bin/pint"
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true,
+            "phpstan/extension-installer": true
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "RickDBCN\\FilamentEmail\\FilamentEmailServiceProvider"
+            ],
+            "aliases": {
+                "FilamentEmail": "RickDBCN\\FilamentEmail\\Facades\\FilamentEmail"
+            }
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

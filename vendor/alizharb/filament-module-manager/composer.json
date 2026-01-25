@@ -1,0 +1,73 @@
+{
+  "name": "alizharb/filament-module-manager",
+  "description": "Filament v4 plugin: Module Manager page + Modules overview widget (Nwidart modules integration).",
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Ali Harb",
+      "email": "harbzali@gmail.com",
+      "role": "Developer"
+    }
+  ],
+  "keywords": [
+    "alizharb",
+    "filament-module-manager",
+    "filament-module",
+    "laravel-modules",
+    "filament-plugin",
+    "laravel-plugin",
+    "filament-laravel-modules",
+    "laravel-laravel-modules",
+    "filament-laravel-plugin",
+    "laravel-laravel-plugin"
+  ],
+  "require": {
+    "php": "^8.3",
+    "filament/filament": "^4.0|^5.0",
+    "nwidart/laravel-modules": "^12.0",
+    "spatie/laravel-package-tools": "^1.16",
+    "spatie/laravel-data": "^4.17",
+    "calebporzio/sushi": "^2.5"
+  },
+  "require-dev": {
+    "laravel/pint": "^1.0",
+    "orchestra/testbench": "^9.0 || ^10.0",
+    "pestphp/pest": "^2.0|^3.0",
+    "pestphp/pest-plugin-laravel": "^2.0|^3.0",
+    "phpunit/phpunit": "^10.0|^11.0"
+  },
+  "scripts": {
+    "post-autoload-dump": [
+      "@php vendor/bin/testbench package:discover --ansi"
+    ],
+    "test": "vendor/bin/pest",
+    "test:coverage": "vendor/bin/pest --coverage",
+    "format": "vendor/bin/pint"
+  },
+  "config": {
+    "allow-plugins": {
+      "pestphp/pest-plugin": true,
+      "wikimedia/composer-merge-plugin": true
+    }
+  },
+  "autoload": {
+    "psr-4": {
+      "Alizharb\\FilamentModuleManager\\": "src"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Alizharb\\FilamentModuleManager\\Tests\\": "tests"
+    }
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "Alizharb\\FilamentModuleManager\\FilamentModuleManagerServiceProvider"
+      ]
+    }
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true
+}

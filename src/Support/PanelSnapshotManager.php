@@ -28,6 +28,9 @@ class PanelSnapshotManager
                 ]
             );
         }
+
+        // Also sync plugins to ensure overrides table is populated for UI
+        PluginSyncManager::sync();
     }
 
     public static function getSnapshots(): array

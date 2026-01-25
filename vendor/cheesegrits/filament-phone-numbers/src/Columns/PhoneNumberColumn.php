@@ -1,0 +1,138 @@
+<?php
+
+namespace Cheesegrits\FilamentPhoneNumbers\Columns;
+
+use Brick\PhoneNumber\PhoneNumberFormat;
+use Cheesegrits\FilamentPhoneNumbers\Support\PhoneHelper;
+use Closure;
+use Filament\Tables\Columns\Concerns\CanBeSearchable;
+use Filament\Tables\Columns\TextColumn;
+use Illuminate\Database\Eloquent\Builder;
+use libphonenumber\PhoneNumberUtil;
+
+class PhoneNumberColumn extends TextColumn
+{
+    use CanBeSearchable;
+
+    protected ?PhoneNumberFormat $displayFormat = null;
+
+    protected bool | Closure $dial = false;
+
+    protected string | Closure | null $region = null;
+
+    protected bool | Closure $useDefaultSearch = false;
+
+    public function displayFormat(PhoneNumberFormat $format = PhoneNumberFormat::NATIONAL): static
+    {
+        $this->displayFormat = $format;
+
+        return $this;
+    }
+
+    public function getDisplayFormat(): PhoneNumberFormat
+    {
+        return $this->displayFormat ? $this->evaluate($this->displayFormat)
+            : config('filament-phone-numbers.defaults.display_format');
+    }
+
+    public function region(string $region = 'US'): static
+    {
+        $this->region = $region;
+
+        return $this;
+    }
+
+    public function getRegion(): string
+    {
+        return $this->region ? $this->evaluate($this->region)
+            : config('filament-phone-numbers.defaults.region');
+    }
+
+    public function dial(bool $dial = true): static
+    {
+        $this->dial = $dial;
+
+        $this->url(fn (?string $state) => PhoneHelper::formatPhoneNumber(
+            number: $state,
+            strict: false,
+            format: PhoneNumberFormat::RFC3966,
+            region: $this->getRegion()
+        ));
+
+        return $this;
+    }
+
+    public function getDial(): string
+    {
+        return $this->evaluate($this->dial);
+    }
+
+    public function useDefaultSearch($defaultSearch = true): static
+    {
+        $this->useDefaultSearch = $defaultSearch;
+
+        return $this;
+    }
+
+    public function getUseDefaultSearch(): bool
+    {
+        return $this->evaluate($this->useDefaultSearch);
+    }
+
+    public function searchable(Closure | bool | array | string $condition = true, ?Closure $query = null, bool $isIndividual = false, bool $isGlobal = true): static
+    {
+        if (! $this->getUseDefaultSearch() && ! $query) {
+            parent::searchable(
+                condition: $condition,
+                query: function (Builder $query, string $search) {
+                    if (str_starts_with($search, '(')) {
+                        $phoneNumberUtil = PhoneNumberUtil::getInstance();
+                        $country = $phoneNumberUtil->getCountryCodeForRegion($this->getRegion());
+                        $numbers = '+' . $country . preg_replace('/[^0-9]/', '', $search);
+                    } else {
+                        $numbers = preg_replace('/[^0-9]/', '', $search);
+                    }
+
+                    if (filled($numbers)) {
+                        return $query->where($this->getName(), 'like', '%' . $numbers . '%');
+                    } else {
+                        return $query;
+                    }
+                },
+                isIndividual: $isIndividual,
+                isGlobal: $isGlobal
+            );
+        } else {
+            parent::searchable(condition: $condition, query: $query, isIndividual: $isIndividual, isGlobal: $isGlobal);
+        }
+
+        return $this;
+    }
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->formatStateUsing(static function (PhoneNumberColumn $column, $state): ?string {
+            if (blank($state)) {
+                return null;
+            }
+
+            return PhoneHelper::formatPhoneNumber(
+                number: $state,
+                strict: false,
+                format: $column->getDisplayFormat(),
+                region: $column->getRegion()
+            );
+        });
+
+        if ($this->getDial()) {
+            $this->url(fn (string $state) => PhoneHelper::formatPhoneNumber(
+                number: $state,
+                strict: false,
+                format: PhoneNumberFormat::RFC3966,
+                region: $this->getRegion()
+            ));
+        }
+    }
+}

@@ -2,21 +2,30 @@
 
 namespace Raison\FilamentStarter\Filament\Resources;
 
+use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
-use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\ToggleColumn;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
 use Raison\FilamentStarter\Models\PanelPluginOverride;
 use Raison\FilamentStarter\Support\PluginRegistry;
+use Raison\FilamentStarter\Support\PluginStateResolver;
+use Raison\FilamentStarter\Support\PluginSyncManager;
 
 class PanelPluginOverrideResource extends Resource
 {
     protected static ?string $model = PanelPluginOverride::class;
 
+    protected static ?string $navigationLabel = 'Plugin Management';
+
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-adjustments-horizontal';
 
     protected static string|\UnitEnum|null $navigationGroup = 'Platform';
+
+    protected static ?int $navigationSort = 1;
 
     public static function form(\Filament\Schemas\Schema $form): \Filament\Schemas\Schema
     {
@@ -46,8 +55,39 @@ class PanelPluginOverrideResource extends Resource
             ->columns([
                 TextColumn::make('panel_id'),
                 TextColumn::make('plugin_key'),
-                IconColumn::make('enabled')->boolean(),
+                ToggleColumn::make('enabled')
+                    ->disabled(fn ($record) => PluginRegistry::isDangerous($record?->plugin_key)),
                 TextColumn::make('tenant_id'),
+            ])
+            ->filters([
+                SelectFilter::make('panel_id')
+                    ->options(fn () => \Raison\FilamentStarter\Models\PanelSnapshot::pluck('panel_id', 'panel_id')),
+                SelectFilter::make('plugin_key')
+                    ->options(collect(PluginRegistry::getPlugins())->mapWithKeys(fn ($v, $k) => [$k => $v['label']])),
+                TernaryFilter::make('enabled'),
+                SelectFilter::make('tenant_id')
+                    ->options(fn () => PanelPluginOverride::whereNotNull('tenant_id')->distinct()->pluck('tenant_id', 'tenant_id'))
+                    ->hidden(! config('filament-starter.tenancy.enabled')),
+            ])
+            ->headerActions([
+                Action::make('sync_plugins')
+                    ->label('Sync from Registry')
+                    ->action(fn () => PluginSyncManager::sync())
+                    ->requiresConfirmation()
+                    ->color('info'),
+                Action::make('clear_cache')
+                    ->label('Clear Plugin Cache')
+                    ->action(function () {
+                        foreach (\Filament\Facades\Filament::getPanels() as $panelId => $panel) {
+                            PluginStateResolver::invalidate($panelId);
+                        }
+                        \Filament\Notifications\Notification::make()
+                            ->title('Plugin cache cleared successfully')
+                            ->success()
+                            ->send();
+                    })
+                    ->requiresConfirmation()
+                    ->color('warning'),
             ]);
     }
 
@@ -60,24 +100,24 @@ class PanelPluginOverrideResource extends Resource
         ];
     }
 
+    public static function canViewAny(): bool
+    {
+        return static::isSuperAdmin();
+    }
+
     public static function canEdit($record): bool
     {
-        return static::isPlatformPanel() && static::isSuperAdmin();
+        return static::isSuperAdmin();
     }
 
     public static function canCreate(): bool
     {
-        return static::isPlatformPanel() && static::isSuperAdmin();
+        return static::isSuperAdmin();
     }
 
     public static function canDelete($record): bool
     {
-        return static::isPlatformPanel() && static::isSuperAdmin();
-    }
-
-    protected static function isPlatformPanel(): bool
-    {
-        return \Filament\Facades\Filament::getCurrentPanel()?->getId() === 'platform';
+        return static::isSuperAdmin();
     }
 
     protected static function isSuperAdmin(): bool
@@ -87,9 +127,8 @@ class PanelPluginOverrideResource extends Resource
             return false;
         }
 
-        $column = config('filament-starter.superadmin.column', 'is_admin');
-        $value = config('filament-starter.superadmin.value', true);
+        $role = config('filament-starter.superadmin.role', 'super_admin');
 
-        return $user->{$column} === $value;
+        return method_exists($user, 'hasRole') && $user->hasRole($role);
     }
 }

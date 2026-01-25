@@ -5,12 +5,30 @@ namespace Raison\FilamentStarter\Commands;
 use Illuminate\Console\Command;
 use Raison\FilamentStarter\Support\PanelSnapshotManager;
 
+/**
+ * Class StarterInstallCommand
+ *
+ * Artisan command to initialize the Starter Platform.
+ */
 class StarterInstallCommand extends Command
 {
+    /**
+     * The name and signature of the console command.
+     *
+     * @var string
+     */
     protected $signature = 'starter:install {--force} {--tenancy= : Enable tenancy (yes/no)} {--multilanguage= : Enable multilanguage (yes/no)}';
 
+    /**
+     * The console command description.
+     *
+     * @var string
+     */
     protected $description = 'Initialize the Starter Platform';
 
+    /**
+     * Execute the console command.
+     */
     public function handle(): int
     {
         if (config('filament-starter.installed') && ! $this->option('force')) {
@@ -24,8 +42,8 @@ class StarterInstallCommand extends Command
         // 1. Run migrations
         $this->call('migrate', ['--force' => true]);
 
-        // 2. Snapshot panels
-        $this->info('Snapshotting panels...');
+        // 2. Snapshot panels and sync plugins
+        $this->info('Snapshotting panels and syncing plugins...');
         PanelSnapshotManager::snapshot();
 
         // 3. Collect invariants
@@ -49,6 +67,9 @@ class StarterInstallCommand extends Command
         return 0;
     }
 
+    /**
+     * Get invariant options from command or interaction.
+     */
     protected function getInvariants(string $key): bool
     {
         $option = $this->option($key);
@@ -64,6 +85,9 @@ class StarterInstallCommand extends Command
         return $this->confirm("Enable {$key}?", false);
     }
 
+    /**
+     * Update platform configuration.
+     */
     protected function updateConfig(bool $tenancy, bool $multilanguage): void
     {
         // Ideally we use a package like 'october/rain' or similar for config writing

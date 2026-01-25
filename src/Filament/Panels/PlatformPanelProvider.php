@@ -15,10 +15,7 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
-use Raison\FilamentStarter\Filament\Resources\AuditLogResource;
-use Raison\FilamentStarter\Filament\Resources\PanelPluginOverrideResource;
-use Raison\FilamentStarter\Filament\Resources\PanelSnapshotResource;
-use Raison\FilamentStarter\Filament\Resources\SystemStatusResource;
+use Raison\FilamentStarter\Filament\StarterPlugin;
 
 class PlatformPanelProvider extends PanelProvider
 {
@@ -28,14 +25,17 @@ class PlatformPanelProvider extends PanelProvider
             ->id('platform')
             ->path('platform')
             ->login()
+            ->brandName('Platform Manager')
             ->colors([
                 'primary' => Color::Amber,
             ])
-            ->resources([
-                PanelPluginOverrideResource::class,
-                PanelSnapshotResource::class,
-                SystemStatusResource::class,
-                AuditLogResource::class,
+            ->plugins([
+                StarterPlugin::make(),
+            ])
+            ->navigationGroups([
+                \Filament\Navigation\NavigationGroup::make()
+                    ->label('Platform')
+                    ->icon('heroicon-o-cpu-chip'),
             ])
             ->middleware([
                 EncryptCookies::class,

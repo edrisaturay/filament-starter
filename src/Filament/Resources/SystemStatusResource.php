@@ -8,9 +8,13 @@ use Filament\Tables\Columns\TextColumn;
 
 class SystemStatusResource extends Resource
 {
+    protected static ?string $model = \Raison\FilamentStarter\Models\AuditLog::class;
+
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-heart';
 
     protected static string|\UnitEnum|null $navigationGroup = 'Platform';
+
+    protected static ?int $navigationSort = 3;
 
     public static function table(\Filament\Tables\Table $table): \Filament\Tables\Table
     {
@@ -39,5 +43,22 @@ class SystemStatusResource extends Resource
         return [
             'index' => SystemStatusResource\Pages\ListSystemStatuses::route('/'),
         ];
+    }
+
+    public static function canViewAny(): bool
+    {
+        return static::isSuperAdmin();
+    }
+
+    protected static function isSuperAdmin(): bool
+    {
+        $user = auth()->user();
+        if (! $user) {
+            return false;
+        }
+
+        $role = config('filament-starter.superadmin.role', 'super_admin');
+
+        return method_exists($user, 'hasRole') && $user->hasRole($role);
     }
 }

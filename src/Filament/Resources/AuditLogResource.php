@@ -14,6 +14,8 @@ class AuditLogResource extends Resource
 
     protected static string|\UnitEnum|null $navigationGroup = 'Platform';
 
+    protected static ?int $navigationSort = 4;
+
     public static function table(\Filament\Tables\Table $table): \Filament\Tables\Table
     {
         return $table
@@ -32,5 +34,22 @@ class AuditLogResource extends Resource
         return [
             'index' => AuditLogResource\Pages\ListAuditLogs::route('/'),
         ];
+    }
+
+    public static function canViewAny(): bool
+    {
+        return static::isSuperAdmin();
+    }
+
+    protected static function isSuperAdmin(): bool
+    {
+        $user = auth()->user();
+        if (! $user) {
+            return false;
+        }
+
+        $role = config('filament-starter.superadmin.role', 'super_admin');
+
+        return method_exists($user, 'hasRole') && $user->hasRole($role);
     }
 }

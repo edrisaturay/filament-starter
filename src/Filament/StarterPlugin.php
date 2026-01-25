@@ -4,6 +4,10 @@ namespace Raison\FilamentStarter\Filament;
 
 use Filament\Contracts\Plugin;
 use Filament\Panel;
+use Raison\FilamentStarter\Filament\Resources\AuditLogResource;
+use Raison\FilamentStarter\Filament\Resources\PanelPluginOverrideResource;
+use Raison\FilamentStarter\Filament\Resources\PanelSnapshotResource;
+use Raison\FilamentStarter\Filament\Resources\SystemStatusResource;
 
 class StarterPlugin implements Plugin
 {
@@ -14,9 +18,13 @@ class StarterPlugin implements Plugin
 
     public function register(Panel $panel): void
     {
-        if ($panel->getId() === 'platform') {
-            return;
-        }
+        $panel
+            ->resources([
+                PanelPluginOverrideResource::class,
+                PanelSnapshotResource::class,
+                SystemStatusResource::class,
+                AuditLogResource::class,
+            ]);
 
         PlatformPanelFactory::build($panel, $panel->getId());
     }

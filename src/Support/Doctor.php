@@ -2,8 +2,18 @@
 
 namespace Raison\FilamentStarter\Support;
 
+/**
+ * Class Doctor
+ *
+ * Provides health checks for the Starter Platform.
+ */
 class Doctor
 {
+    /**
+     * Run all health checks and return the results.
+     *
+     * @return array<int, array<string, mixed>>
+     */
     public function check(): array
     {
         $results = [];

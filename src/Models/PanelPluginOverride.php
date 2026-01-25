@@ -38,10 +38,27 @@ class PanelPluginOverride extends Model
 
         static::saved(function ($model) {
             PluginStateResolver::invalidate($model->panel_id, $model->tenant_id);
+
+            \Raison\FilamentStarter\Models\AuditLog::create([
+                'actor_user_id' => auth()->id(),
+                'action' => 'update_plugin_state',
+                'panel_id' => $model->panel_id,
+                'plugin_key' => $model->plugin_key,
+                'before' => $model->getOriginal(),
+                'after' => $model->getAttributes(),
+            ]);
         });
 
         static::deleted(function ($model) {
             PluginStateResolver::invalidate($model->panel_id, $model->tenant_id);
+
+            \Raison\FilamentStarter\Models\AuditLog::create([
+                'actor_user_id' => auth()->id(),
+                'action' => 'delete_plugin_override',
+                'panel_id' => $model->panel_id,
+                'plugin_key' => $model->plugin_key,
+                'before' => $model->getAttributes(),
+            ]);
         });
     }
 }
