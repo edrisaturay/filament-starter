@@ -5,15 +5,14 @@ namespace Raison\FilamentStarter\Filament\Resources;
 use Filament\Resources\Resource;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Table;
 
 class SystemStatusResource extends Resource
 {
-    protected static ?string $navigationIcon = 'heroicon-o-heart';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-heart';
 
-    protected static ?string $navigationGroup = 'Platform';
+    protected static string|\UnitEnum|null $navigationGroup = 'Platform';
 
-    public static function table(Table $table): Table
+    public static function table(\Filament\Tables\Table $table): \Filament\Tables\Table
     {
         return $table
             ->columns([

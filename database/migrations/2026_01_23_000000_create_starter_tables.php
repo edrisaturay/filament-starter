@@ -10,14 +10,19 @@ return new class extends Migration
     {
         Schema::create('starter_panel_plugin_overrides', function (Blueprint $blueprint) {
             $blueprint->id();
-            $blueprint->string('panel_id')->index();
-            $blueprint->string('plugin_key')->index();
+            $blueprint->string('panel_id');
+            $blueprint->string('plugin_key');
             $blueprint->boolean('enabled')->nullable();
             $blueprint->json('options')->nullable();
             $blueprint->integer('options_version')->default(1);
-            $blueprint->string('tenant_id')->nullable()->index();
+            $blueprint->string('tenant_id')->nullable();
             $blueprint->unsignedBigInteger('updated_by_user_id')->nullable();
             $blueprint->timestamps();
+
+            $blueprint->index('panel_id');
+            $blueprint->index('plugin_key');
+            $blueprint->index('tenant_id');
+            $blueprint->unique(['panel_id', 'plugin_key', 'tenant_id'], 'starter_overrides_unique');
         });
 
         Schema::create('starter_panel_snapshots', function (Blueprint $blueprint) {

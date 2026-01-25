@@ -31,6 +31,8 @@ class PluginRegistry
                 'dangerous_to_disable' => true,
                 'requires_migrations' => true,
                 'default_options' => [],
+                'class' => FilamentShieldPlugin::class,
+                'package' => 'bezhansalleh/filament-shield',
             ],
             'filament-breezy' => [
                 'label' => 'Filament Breezy',
@@ -44,6 +46,8 @@ class PluginRegistry
                 'dangerous_to_disable' => true,
                 'requires_migrations' => true,
                 'default_options' => [],
+                'class' => BreezyCore::class,
+                'package' => 'jeffgreco13/filament-breezy',
             ],
             'filament-jobs-monitor' => [
                 'label' => 'Jobs Monitor',
@@ -52,6 +56,8 @@ class PluginRegistry
                 'dangerous_to_disable' => false,
                 'requires_migrations' => true,
                 'default_options' => [],
+                'class' => FilamentJobsMonitorPlugin::class,
+                'package' => 'croustibat/filament-jobs-monitor',
             ],
             'filament-log-viewer' => [
                 'label' => 'Log Viewer',
@@ -60,6 +66,8 @@ class PluginRegistry
                 'dangerous_to_disable' => false,
                 'requires_migrations' => false,
                 'default_options' => [],
+                'class' => FilamentLogViewer::class,
+                'package' => 'achyutn/filament-log-viewer',
             ],
             'filament-authentication-log' => [
                 'label' => 'Authentication Log',
@@ -68,6 +76,8 @@ class PluginRegistry
                 'dangerous_to_disable' => false,
                 'requires_migrations' => true,
                 'default_options' => [],
+                'class' => FilamentAuthenticationLogPlugin::class,
+                'package' => 'tapp/filament-authentication-log',
             ],
             'filament-email' => [
                 'label' => 'Filament Email',
@@ -76,6 +86,8 @@ class PluginRegistry
                 'dangerous_to_disable' => false,
                 'requires_migrations' => true,
                 'default_options' => [],
+                'class' => FilamentEmail::class,
+                'package' => 'rickdbcn/filament-email',
             ],
             'filament-health' => [
                 'label' => 'Spatie Health',
@@ -84,6 +96,8 @@ class PluginRegistry
                 'dangerous_to_disable' => false,
                 'requires_migrations' => true,
                 'default_options' => [],
+                'class' => FilamentSpatieLaravelHealthPlugin::class,
+                'package' => 'shuvroroy/filament-spatie-laravel-health',
             ],
             'filament-backup' => [
                 'label' => 'Spatie Backup',
@@ -92,6 +106,8 @@ class PluginRegistry
                 'dangerous_to_disable' => false,
                 'requires_migrations' => true,
                 'default_options' => [],
+                'class' => FilamentSpatieLaravelBackupPlugin::class,
+                'package' => 'shuvroroy/filament-spatie-laravel-backup',
             ],
             'filament-environment-indicator' => [
                 'label' => 'Environment Indicator',
@@ -100,6 +116,8 @@ class PluginRegistry
                 'dangerous_to_disable' => false,
                 'requires_migrations' => false,
                 'default_options' => [],
+                'class' => EnvironmentIndicatorPlugin::class,
+                'package' => 'pxlrbt/filament-environment-indicator',
             ],
             'global-search-modal' => [
                 'label' => 'Global Search Modal',
@@ -108,6 +126,8 @@ class PluginRegistry
                 'dangerous_to_disable' => false,
                 'requires_migrations' => false,
                 'default_options' => [],
+                'class' => GlobalSearchModalPlugin::class,
+                'package' => 'charrafimed/global-search-modal',
             ],
             'filter-sets' => [
                 'label' => 'Advanced Tables (Filter Sets)',
@@ -116,6 +136,8 @@ class PluginRegistry
                 'dangerous_to_disable' => false,
                 'requires_migrations' => true,
                 'default_options' => [],
+                'class' => AdvancedTablesPlugin::class,
+                'package' => 'archilex/filament-filter-sets',
             ],
             'sticky-table-header' => [
                 'label' => 'Sticky Table Header',
@@ -124,6 +146,8 @@ class PluginRegistry
                 'dangerous_to_disable' => false,
                 'requires_migrations' => false,
                 'default_options' => [],
+                'class' => StickyTableHeaderPlugin::class,
+                'package' => 'watheqalshowaiter/filament-sticky-table-header',
             ],
             'resized-column' => [
                 'label' => 'Resized Column',
@@ -132,6 +156,8 @@ class PluginRegistry
                 'dangerous_to_disable' => false,
                 'requires_migrations' => true,
                 'default_options' => [],
+                'class' => ResizedColumnPlugin::class,
+                'package' => 'asmit/resized-column',
             ],
             'phone-numbers' => [
                 'label' => 'Phone Numbers',
@@ -140,6 +166,8 @@ class PluginRegistry
                 'dangerous_to_disable' => false,
                 'requires_migrations' => false,
                 'default_options' => [],
+                'class' => 'Cheesegrits\FilamentPhoneNumbers\FilamentPhoneNumbersServiceProvider',
+                'package' => 'cheesegrits/filament-phone-numbers',
             ],
             'statefusion' => [
                 'label' => 'Statefusion',
@@ -148,6 +176,8 @@ class PluginRegistry
                 'dangerous_to_disable' => false,
                 'requires_migrations' => false,
                 'default_options' => [],
+                'class' => 'A909m\FilamentStatefusion\FilamentStatefusionServiceProvider',
+                'package' => 'a909m/filament-statefusion',
             ],
             'filament-activity-log' => [
                 'label' => 'Activity Log',
@@ -156,6 +186,8 @@ class PluginRegistry
                 'dangerous_to_disable' => false,
                 'requires_migrations' => true,
                 'default_options' => [],
+                'class' => ActivityLogPlugin::class,
+                'package' => 'alizharb/filament-activity-log',
             ],
             'filament-module-manager' => [
                 'label' => 'Module Manager',
@@ -164,6 +196,8 @@ class PluginRegistry
                 'dangerous_to_disable' => false,
                 'requires_migrations' => false,
                 'default_options' => [],
+                'class' => FilamentModuleManagerPlugin::class,
+                'package' => 'alizharb/filament-module-manager',
             ],
             'filament-impersonate' => [
                 'label' => 'Impersonate',
@@ -172,7 +206,20 @@ class PluginRegistry
                 'dangerous_to_disable' => false,
                 'requires_migrations' => false,
                 'default_options' => [],
+                'class' => 'STS\FilamentImpersonate\FilamentImpersonateServiceProvider',
+                'package' => 'stechstudio/filament-impersonate',
             ],
         ];
+    }
+
+    public static function isDangerous(?string $key): bool
+    {
+        if (! $key) {
+            return false;
+        }
+
+        $plugins = static::getPlugins();
+
+        return $plugins[$key]['dangerous_to_disable'] ?? false;
     }
 }

@@ -27,6 +27,7 @@ class PlatformPanelProvider extends PanelProvider
         return $panel
             ->id('platform')
             ->path('platform')
+            ->login()
             ->colors([
                 'primary' => Color::Amber,
             ])

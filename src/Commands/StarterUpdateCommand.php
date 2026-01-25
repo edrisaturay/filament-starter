@@ -17,7 +17,7 @@ class StarterUpdateCommand extends Command
         $this->info('Starting platform update...');
 
         // 1. Run migrations
-        $this->call('migrate');
+        $this->call('migrate', ['--force' => true]);
 
         // 2. Migrate option schemas
         $migrator->migrate();

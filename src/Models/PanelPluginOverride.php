@@ -26,6 +26,16 @@ class PanelPluginOverride extends Model
 
     protected static function booted()
     {
+        static::saving(function ($model) {
+            if (\Raison\FilamentStarter\Support\PluginRegistry::isDangerous($model->plugin_key) && $model->enabled === false) {
+                // Prevent disabling dangerous plugins
+                $model->enabled = true;
+
+                // In a real scenario, we might want to throw an exception or log a warning
+                \Illuminate\Support\Facades\Log::warning("Attempted to disable dangerous plugin: {$model->plugin_key}");
+            }
+        });
+
         static::saved(function ($model) {
             PluginStateResolver::invalidate($model->panel_id, $model->tenant_id);
         });

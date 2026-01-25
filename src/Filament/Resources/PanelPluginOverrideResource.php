@@ -4,39 +4,43 @@ namespace Raison\FilamentStarter\Filament\Resources;
 
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Table;
 use Raison\FilamentStarter\Models\PanelPluginOverride;
-use Raison\FilamentStarter\Models\PanelSnapshot;
 use Raison\FilamentStarter\Support\PluginRegistry;
 
 class PanelPluginOverrideResource extends Resource
 {
     protected static ?string $model = PanelPluginOverride::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-adjustments-horizontal';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-adjustments-horizontal';
 
-    protected static ?string $navigationGroup = 'Platform';
+    protected static string|\UnitEnum|null $navigationGroup = 'Platform';
 
-    public static function form(Form $form): Form
+    public static function form(\Filament\Schemas\Schema $form): \Filament\Schemas\Schema
     {
+        /** @var \Filament\Forms\Form $form */
         return $form
             ->schema([
                 Select::make('panel_id')
-                    ->options(fn () => PanelSnapshot::pluck('panel_id', 'panel_id'))
+                    ->options(fn () => \Raison\FilamentStarter\Models\PanelSnapshot::pluck('panel_id', 'panel_id'))
                     ->required(),
                 Select::make('plugin_key')
                     ->options(collect(PluginRegistry::getPlugins())->mapWithKeys(fn ($v, $k) => [$k => $v['label']]))
-                    ->required(),
+                    ->required()
+                    ->live(),
                 Toggle::make('enabled')
-                    ->nullable(),
+                    ->nullable()
+                    ->disabled(fn (callable $get) => PluginRegistry::isDangerous($get('plugin_key')))
+                    ->helperText(fn (callable $get) => PluginRegistry::isDangerous($get('plugin_key')) ? 'Dangerous plugins cannot be disabled.' : null),
+                Select::make('tenant_id')
+                    ->nullable()
+                    ->hidden(! config('filament-starter.tenancy.enabled')),
             ]);
     }
 
-    public static function table(Table $table): Table
+    public static function table(\Filament\Tables\Table $table): \Filament\Tables\Table
     {
         return $table
             ->columns([
@@ -56,9 +60,36 @@ class PanelPluginOverrideResource extends Resource
         ];
     }
 
-    // Custom model binding because we use DB table
-    public static function getModel(): string
+    public static function canEdit($record): bool
     {
-        return \Raison\FilamentStarter\Models\PanelPluginOverride::class;
+        return static::isPlatformPanel() && static::isSuperAdmin();
+    }
+
+    public static function canCreate(): bool
+    {
+        return static::isPlatformPanel() && static::isSuperAdmin();
+    }
+
+    public static function canDelete($record): bool
+    {
+        return static::isPlatformPanel() && static::isSuperAdmin();
+    }
+
+    protected static function isPlatformPanel(): bool
+    {
+        return \Filament\Facades\Filament::getCurrentPanel()?->getId() === 'platform';
+    }
+
+    protected static function isSuperAdmin(): bool
+    {
+        $user = auth()->user();
+        if (! $user) {
+            return false;
+        }
+
+        $column = config('filament-starter.superadmin.column', 'is_admin');
+        $value = config('filament-starter.superadmin.value', true);
+
+        return $user->{$column} === $value;
     }
 }

@@ -28,21 +28,25 @@ class PluginStateResolver
                 ];
             }
 
-            // 2. DB overrides
-            $overrides = DB::table('starter_panel_plugin_overrides')
-                ->where('panel_id', $panelId)
-                ->where('tenant_id', $tenantId)
-                ->get();
+            // 2. DB overrides (Only if table exists)
+            try {
+                $overrides = DB::table('starter_panel_plugin_overrides')
+                    ->where('panel_id', $panelId)
+                    ->where('tenant_id', $tenantId)
+                    ->get();
 
-            foreach ($overrides as $override) {
-                if (isset($resolved[$override->plugin_key])) {
-                    if ($override->enabled !== null) {
-                        $resolved[$override->plugin_key]['enabled'] = (bool) $override->enabled;
-                    }
-                    if ($override->options !== null) {
-                        $resolved[$override->plugin_key]['options'] = json_decode($override->options, true);
+                foreach ($overrides as $override) {
+                    if (isset($resolved[$override->plugin_key])) {
+                        if ($override->enabled !== null) {
+                            $resolved[$override->plugin_key]['enabled'] = (bool) $override->enabled;
+                        }
+                        if ($override->options !== null) {
+                            $resolved[$override->plugin_key]['options'] = is_string($override->options) ? json_decode($override->options, true) : $override->options;
+                        }
                     }
                 }
+            } catch (\Exception $e) {
+                // Table might not exist yet during migration/install
             }
 
             // 3. Safe Mode

@@ -11,8 +11,26 @@
     ],
     "require": {
         "php": "^8.3",
-        "filament/filament": "^3.0|^4.0|^5.0",
-        "laravel/framework": "^11.0|^12.0"
+        "filament/filament": "^5.0",
+        "illuminate/support": "^12.0",
+        "a909m/filament-statefusion": "^2.3",
+        "achyutn/filament-log-viewer": "^2.1",
+        "alizharb/filament-activity-log": "^1.2",
+        "alizharb/filament-module-manager": "^2.2",
+        "archilex/filament-filter-sets": "^5.0",
+        "asmit/resized-column": "^2.1",
+        "bezhansalleh/filament-shield": "^4.1",
+        "charrafimed/global-search-modal": "^5.0",
+        "cheesegrits/filament-phone-numbers": "^2.1",
+        "croustibat/filament-jobs-monitor": "^4.1",
+        "jeffgreco13/filament-breezy": "^3.1",
+        "pxlrbt/filament-environment-indicator": "^3.4",
+        "rickdbcn/filament-email": "^2.2",
+        "shuvroroy/filament-spatie-laravel-backup": "^3.3",
+        "shuvroroy/filament-spatie-laravel-health": "^3.2",
+        "stechstudio/filament-impersonate": "^4.1",
+        "tapp/filament-authentication-log": "^5.0",
+        "watheqalshowaiter/filament-sticky-table-header": "^1.4"
     },
     "autoload": {
         "psr-4": {
