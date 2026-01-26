@@ -7,7 +7,7 @@ use Raison\FilamentStarter\Commands\StarterDoctorCommand;
 use Raison\FilamentStarter\Commands\StarterInstallCommand;
 use Raison\FilamentStarter\Commands\StarterSafeModeCommand;
 use Raison\FilamentStarter\Commands\StarterUpdateCommand;
-use Raison\FilamentStarter\Filament\Panels\PlatformPanelProvider;
+use Raison\FilamentStarter\Http\Middleware\DeveloperGateMiddleware;
 
 class StarterServiceProvider extends ServiceProvider
 {
@@ -15,7 +15,7 @@ class StarterServiceProvider extends ServiceProvider
     {
         $this->mergeConfigFrom(__DIR__.'/../config/filament-starter.php', 'filament-starter');
 
-        $this->app->register(PlatformPanelProvider::class);
+        $this->app['router']->aliasMiddleware('starter.developer-gate', DeveloperGateMiddleware::class);
     }
 
     public function boot(): void

@@ -41,8 +41,12 @@ class PanelPluginOverrideResource extends Resource
                     ->live(),
                 Toggle::make('enabled')
                     ->nullable()
-                    ->disabled(fn (callable $get) => PluginRegistry::isDangerous($get('plugin_key')))
-                    ->helperText(fn (callable $get) => PluginRegistry::isDangerous($get('plugin_key')) ? 'Dangerous plugins cannot be disabled.' : null),
+                    ->helperText(fn ($record) => $record && $record->is_dangerous ? 'This plugin is marked as dangerous. It cannot be disabled.' : null)
+                    ->disabled(fn ($record) => $record && $record->is_dangerous)
+                    ->dehydrated(),
+                Toggle::make('is_dangerous')
+                    ->label('Mark as Dangerous')
+                    ->live(),
                 Select::make('tenant_id')
                     ->nullable()
                     ->hidden(! config('filament-starter.tenancy.enabled')),
@@ -56,7 +60,9 @@ class PanelPluginOverrideResource extends Resource
                 TextColumn::make('panel_id'),
                 TextColumn::make('plugin_key'),
                 ToggleColumn::make('enabled')
-                    ->disabled(fn ($record) => PluginRegistry::isDangerous($record?->plugin_key)),
+                    ->disabled(fn ($record) => $record && $record->is_dangerous),
+                ToggleColumn::make('is_dangerous')
+                    ->label('Dangerous'),
                 TextColumn::make('tenant_id'),
             ])
             ->filters([

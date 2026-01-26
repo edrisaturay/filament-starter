@@ -48,6 +48,7 @@ class PluginSyncManager
                         'panel_id' => $panelId,
                         'plugin_key' => $pluginKey,
                         'enabled' => $definition['default_enabled'],
+                        'is_dangerous' => $definition['dangerous_to_disable'],
                         'options' => json_encode($definition['default_options']),
                         'options_version' => 1,
                         'created_at' => now(),
@@ -61,6 +62,7 @@ class PluginSyncManager
                         'plugin_key' => $pluginKey,
                         'after' => [
                             'enabled' => $definition['default_enabled'],
+                            'is_dangerous' => $definition['dangerous_to_disable'],
                             'options' => $definition['default_options'],
                         ],
                     ]);

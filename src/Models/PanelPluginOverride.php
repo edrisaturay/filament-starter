@@ -13,6 +13,7 @@ class PanelPluginOverride extends Model
         'panel_id',
         'plugin_key',
         'enabled',
+        'is_dangerous',
         'options',
         'options_version',
         'tenant_id',
@@ -21,18 +22,24 @@ class PanelPluginOverride extends Model
 
     protected $casts = [
         'enabled' => 'boolean',
+        'is_dangerous' => 'boolean',
         'options' => 'array',
     ];
 
     protected static function booted()
     {
         static::saving(function ($model) {
-            if (\Raison\FilamentStarter\Support\PluginRegistry::isDangerous($model->plugin_key) && $model->enabled === false) {
-                // Prevent disabling dangerous plugins
+            // Re-enforce dangerous plugins logic
+            if ($model->is_dangerous && $model->enabled === false) {
+                // If it's being disabled but is dangerous, we force it to true.
                 $model->enabled = true;
+            }
+        });
 
-                // In a real scenario, we might want to throw an exception or log a warning
-                \Illuminate\Support\Facades\Log::warning("Attempted to disable dangerous plugin: {$model->plugin_key}");
+        static::updated(function ($model) {
+            // If is_dangerous was toggled ON, ensure enabled is also ON
+            if ($model->isDirty('is_dangerous') && $model->is_dangerous && ! $model->enabled) {
+                $model->update(['enabled' => true]);
             }
         });
 

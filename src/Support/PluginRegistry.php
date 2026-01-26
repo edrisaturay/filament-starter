@@ -11,11 +11,18 @@ use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use CharrafiMed\GlobalSearchModal\GlobalSearchModalPlugin;
 use Croustibat\FilamentJobsMonitor\FilamentJobsMonitorPlugin;
 use Filament\Panel;
+use Guava\FilamentKnowledgeBase\Plugins\KnowledgeBaseCompanionPlugin;
+use Guava\FilamentKnowledgeBase\Plugins\KnowledgeBasePlugin;
 use Jeffgreco13\FilamentBreezy\BreezyCore;
+use Promethys\Revive\RevivePlugin;
 use pxlrbt\FilamentEnvironmentIndicator\EnvironmentIndicatorPlugin;
 use RickDBCN\FilamentEmail\FilamentEmail;
 use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackupPlugin;
 use ShuvroRoy\FilamentSpatieLaravelHealth\FilamentSpatieLaravelHealthPlugin;
+use Swis\Filament\Backgrounds\FilamentBackgroundsPlugin;
+use Swis\Filament\Backgrounds\ImageProviders\CuratedBySwis;
+use Swis\Filament\Backgrounds\ImageProviders\MyImages;
+use Swis\Filament\Backgrounds\ImageProviders\Triangles;
 use Tapp\FilamentAuthenticationLog\FilamentAuthenticationLogPlugin;
 use WatheqAlshowaiter\FilamentStickyTableHeader\StickyTableHeaderPlugin;
 
@@ -229,18 +236,118 @@ class PluginRegistry
                 'class' => 'Tapp\FilamentProgressBarColumn\FilamentProgressBarColumnServiceProvider',
                 'package' => 'tapp/filament-progress-bar-column',
             ],
+            'filament-knowledge-base' => [
+                'label' => 'Knowledge Base',
+                'installer' => fn (Panel $panel, array $options) => $panel->plugin(KnowledgeBasePlugin::make()),
+                'default_enabled' => true,
+                'dangerous_to_disable' => false,
+                'requires_migrations' => false,
+                'default_options' => [],
+                'class' => KnowledgeBasePlugin::class,
+                'package' => 'guava/filament-knowledge-base',
+                'npm_dependencies' => [
+                    '@tailwindcss/typography',
+                ],
+            ],
+            'filament-knowledge-base-companion' => [
+                'label' => 'Knowledge Base Companion',
+                'installer' => fn (Panel $panel, array $options) => $panel->plugin(
+                    KnowledgeBaseCompanionPlugin::make()
+                        ->knowledgeBasePanelId('knowledge-base')
+                ),
+                'default_enabled' => true,
+                'dangerous_to_disable' => false,
+                'requires_migrations' => false,
+                'default_options' => [],
+                'class' => KnowledgeBaseCompanionPlugin::class,
+                'package' => 'guava/filament-knowledge-base',
+            ],
+            'filament-backgrounds' => [
+                'label' => 'Filament Backgrounds',
+                'installer' => function (Panel $panel, array $options) {
+                    $plugin = FilamentBackgroundsPlugin::make()
+                        ->showAttribution(config('filament-starter.plugins.backgrounds.show_attribution', true))
+                        ->remember(config('filament-starter.plugins.backgrounds.remember', 900));
+
+                    $imageProvider = config('filament-starter.plugins.backgrounds.image_provider', 'curated');
+
+                    if ($imageProvider === 'my-images') {
+                        $plugin->imageProvider(
+                            MyImages::make()
+                                ->directory(config('filament-starter.plugins.backgrounds.my_images_directory', 'images/backgrounds'))
+                        );
+                    } elseif ($imageProvider === 'triangles') {
+                        $plugin->imageProvider(Triangles::make());
+                    } else {
+                        $plugin->imageProvider(CuratedBySwis::make());
+                    }
+
+                    return $panel->plugin($plugin);
+                },
+                'default_enabled' => true,
+                'dangerous_to_disable' => false,
+                'requires_migrations' => false,
+                'default_options' => [],
+                'class' => FilamentBackgroundsPlugin::class,
+                'package' => 'swisnl/filament-backgrounds',
+            ],
+            'filament-revive' => [
+                'label' => 'Revive (Recycle Bin)',
+                'installer' => function (Panel $panel, array $options) {
+                    $plugin = RevivePlugin::make();
+                    $panelId = $panel->getId();
+
+                    $globalAdminPanels = config('filament-starter.plugins.revive.global_admin_panels', ['admin']);
+
+                    if (in_array($panelId, $globalAdminPanels)) {
+                        $plugin->showAllRecords();
+                    } else {
+                        $userScoping = config('filament-starter.plugins.revive.user_scoping', true);
+                        $tenantScoping = config('filament-starter.plugins.revive.tenant_scoping', true);
+
+                        $plugin->enableUserScoping($userScoping)
+                            ->enableTenantScoping($panel->hasTenancy() && $tenantScoping);
+                    }
+
+                    return $panel->plugin($plugin);
+                },
+                'default_enabled' => true,
+                'dangerous_to_disable' => false,
+                'requires_migrations' => true,
+                'default_options' => [],
+                'class' => RevivePlugin::class,
+                'package' => 'promethys/revive',
+            ],
         ];
     }
 
     /**
      * Determine if a plugin is dangerous to disable.
      */
-    public static function isDangerous(?string $key): bool
+    public static function isDangerous(?string $key, ?string $panelId = null): bool
     {
         if (! $key) {
             return false;
         }
 
+        // 1. Check DB overrides first if panelId is provided
+        if ($panelId) {
+            try {
+                $override = \Illuminate\Support\Facades\DB::table('starter_panel_plugin_overrides')
+                    ->where('panel_id', $panelId)
+                    ->where('plugin_key', $key)
+                    ->whereNull('tenant_id')
+                    ->first();
+
+                if ($override && $override->is_dangerous) {
+                    return true;
+                }
+            } catch (\Exception $e) {
+                // Table might not exist
+            }
+        }
+
+        // 2. Fallback to registry
         $plugins = static::getPlugins();
 
         return $plugins[$key]['dangerous_to_disable'] ?? false;

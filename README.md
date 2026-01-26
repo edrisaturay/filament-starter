@@ -7,17 +7,26 @@ The core engine of the Filament Starter Kit. This package provides centralized p
 ### 1. Plugin Registry (`Support/PluginRegistry.php`)
 A centralized list of all managed Filament plugins. It defines how each plugin is installed, its default state, and whether it's critical for system stability.
 
-### 2. Platform Manager
-Registers a dedicated `platform` panel and provides resources for:
+### 2. Platform Management
+The package provides resources for managing the platform directly within your existing panels:
 - **Plugin Management**: Enable/disable plugins per panel and tenant.
 - **Panel Snapshots**: Track registered panels and their configurations.
 - **System Status**: Real-time health checks for the platform and its dependencies.
 - **Audit Logs**: Track all configuration changes made via the Platform UI.
 
-### 3. Plugin Synchronization (`Support/PluginSyncManager.php`)
+### 4. Plugin Global Config
+The starter kit allows centralized configuration of plugins via `config/filament-starter.php`. For example, `filament-backgrounds` settings are managed there.
+
+### 5. Developer Gate
+Secure any route or panel using a static password for developer-only access.
+- Enabled/Disabled via config.
+- Configurable password.
+- Middleware: `starter.developer-gate`.
+
+### 4. Plugin Synchronization (`Support/PluginSyncManager.php`)
 Ensures that the database overrides are always in sync with the code-based registry. It automatically handles the creation of default records and cleanup of stale entries.
 
-### 4. Platform Doctor (`Support/Doctor.php`)
+### 5. Platform Doctor (`Support/Doctor.php`)
 A diagnostic tool that verifies:
 - Platform installation status.
 - Presence of panel snapshots.
@@ -26,10 +35,40 @@ A diagnostic tool that verifies:
 
 ## Commands
 
-- `php artisan starter:install`: The primary entry point for setting up the platform.
+- `php artisan starter:install`: The primary entry point for setting up the platform. Now supports interactive configuration of plugin publishing, activation, and safety markers.
 - `php artisan starter:doctor`: Diagnostic command for health monitoring.
 - `php artisan starter:update`: Refreshes snapshots and synchronizes the plugin registry.
 - `php artisan starter:safe-mode`: Emergency command to bypass plugin overrides.
+
+## Knowledge Base Support
+The starter kit includes built-in support for `guava/filament-knowledge-base`.
+- **Dedicated Panel**: Requires a panel with ID `knowledge-base`.
+- **Companion Plugin**: Can be enabled per panel via Plugin Management or the installation command.
+- **Theme Requirements**: All panels using KB features MUST have a custom theme with specific Tailwind directives:
+    ```css
+    @plugin "@tailwindcss/typography";
+    @source '../../../../vendor/guava/filament-knowledge-base/src/**/*';
+    @source '../../../../vendor/guava/filament-knowledge-base/resources/views/**/*';
+    ```
+- **Diagnostics**: `starter:doctor` will verify panel existence and theme directive compliance.
+
+## Filament Backgrounds Support
+The starter kit integrates `swisnl/filament-backgrounds`.
+- **Installation**: Run `starter:install` to set up background providers and interactive configuration.
+- **Global Config**: Customize attribution, cache time (remember), and image providers in `config/filament-starter.php`.
+- **Custom Images**: Supports `my-images` provider with a configurable directory.
+
+## Revive Recycle Bin Support
+The starter kit integrates `promethys/revive` for centralized management of deleted records.
+- **Scoping Control**: Configure User-scoping and Tenant-scoping globally via `config/filament-starter.php`.
+- **Admin Visibility**: Define "Global Admin Panels" where admins can see all deleted records regardless of user or tenant.
+- **Interactive Setup**: Run `starter:install` to configure scoping preferences and activate the recycle bin for specific panels.
+
+### New Interactive Installation Features
+During `starter:install`, you can now:
+1. **Publish Configs**: Interactively choose which plugin configuration files to publish to your application.
+2. **Activate Plugins per Panel**: Select exactly which plugins should be enabled for each of your managed panels.
+3. **Mark Dangerous Plugins**: Identify plugins that are critical for your system. Once marked, these plugins cannot be disabled via the UI, ensuring system stability.
 
 ## Configuration
 

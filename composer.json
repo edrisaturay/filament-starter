@@ -31,7 +31,10 @@
         "stechstudio/filament-impersonate": "^4.1",
         "tapp/filament-authentication-log": "^5.0",
         "watheqalshowaiter/filament-sticky-table-header": "^1.4",
-        "tapp/filament-progress-bar-column": "^1.0"
+        "tapp/filament-progress-bar-column": "^1.0",
+        "guava/filament-knowledge-base": "^3.0",
+        "swisnl/filament-backgrounds": "^2.0",
+        "promethys/revive": "^3.0"
     },
     "autoload": {
         "psr-4": {
