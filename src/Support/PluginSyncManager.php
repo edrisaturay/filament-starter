@@ -2,9 +2,9 @@
 
 namespace EdrisaTuray\FilamentStarter\Support;
 
+use EdrisaTuray\FilamentStarter\Models\AuditLog;
 use Filament\Facades\Filament;
 use Illuminate\Support\Facades\DB;
-use EdrisaTuray\FilamentStarter\Models\AuditLog;
 
 /**
  * Class PluginSyncManager

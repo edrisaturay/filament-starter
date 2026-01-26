@@ -2,8 +2,8 @@
 
 namespace EdrisaTuray\FilamentStarter\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use EdrisaTuray\FilamentStarter\Support\PluginStateResolver;
+use Illuminate\Database\Eloquent\Model;
 
 class PanelPluginOverride extends Model
 {

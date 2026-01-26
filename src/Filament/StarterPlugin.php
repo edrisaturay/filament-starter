@@ -2,12 +2,12 @@
 
 namespace EdrisaTuray\FilamentStarter\Filament;
 
-use Filament\Contracts\Plugin;
-use Filament\Panel;
 use EdrisaTuray\FilamentStarter\Filament\Resources\AuditLogResource;
 use EdrisaTuray\FilamentStarter\Filament\Resources\PanelPluginOverrideResource;
 use EdrisaTuray\FilamentStarter\Filament\Resources\PanelSnapshotResource;
 use EdrisaTuray\FilamentStarter\Filament\Resources\SystemStatusResource;
+use Filament\Contracts\Plugin;
+use Filament\Panel;
 
 class StarterPlugin implements Plugin
 {

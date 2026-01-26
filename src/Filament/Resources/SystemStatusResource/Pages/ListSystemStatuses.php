@@ -2,9 +2,9 @@
 
 namespace EdrisaTuray\FilamentStarter\Filament\Resources\SystemStatusResource\Pages;
 
-use Filament\Resources\Pages\ListRecords;
 use EdrisaTuray\FilamentStarter\Filament\Resources\SystemStatusResource;
 use EdrisaTuray\FilamentStarter\Support\Doctor;
+use Filament\Resources\Pages\ListRecords;
 
 class ListSystemStatuses extends ListRecords
 {

@@ -2,8 +2,8 @@
 
 namespace EdrisaTuray\FilamentStarter\Filament\Resources\PanelSnapshotResource\Pages;
 
-use Filament\Resources\Pages\ListRecords;
 use EdrisaTuray\FilamentStarter\Filament\Resources\PanelSnapshotResource;
+use Filament\Resources\Pages\ListRecords;
 
 class ListPanelSnapshots extends ListRecords
 {

@@ -2,13 +2,13 @@
 
 namespace EdrisaTuray\FilamentStarter\Filament\Resources;
 
+use EdrisaTuray\FilamentStarter\Models\PanelSnapshot;
+use EdrisaTuray\FilamentStarter\Support\PanelSnapshotManager;
 use Filament\Actions\Action;
 use Filament\Forms\Components\KeyValue;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Tables\Columns\TextColumn;
-use EdrisaTuray\FilamentStarter\Models\PanelSnapshot;
-use EdrisaTuray\FilamentStarter\Support\PanelSnapshotManager;
 
 class PanelSnapshotResource extends Resource
 {

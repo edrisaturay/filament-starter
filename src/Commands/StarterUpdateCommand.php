@@ -2,9 +2,9 @@
 
 namespace EdrisaTuray\FilamentStarter\Commands;
 
-use Illuminate\Console\Command;
 use EdrisaTuray\FilamentStarter\Support\OptionSchemaMigrator;
 use EdrisaTuray\FilamentStarter\Support\PanelSnapshotManager;
+use Illuminate\Console\Command;
 
 class StarterUpdateCommand extends Command
 {

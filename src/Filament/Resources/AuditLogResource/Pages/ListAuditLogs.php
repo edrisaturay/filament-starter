@@ -2,8 +2,8 @@
 
 namespace EdrisaTuray\FilamentStarter\Filament\Resources\AuditLogResource\Pages;
 
-use Filament\Resources\Pages\ListRecords;
 use EdrisaTuray\FilamentStarter\Filament\Resources\AuditLogResource;
+use Filament\Resources\Pages\ListRecords;
 
 class ListAuditLogs extends ListRecords
 {

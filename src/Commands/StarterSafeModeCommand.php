@@ -2,8 +2,8 @@
 
 namespace EdrisaTuray\FilamentStarter\Commands;
 
-use Illuminate\Console\Command;
 use EdrisaTuray\FilamentStarter\Support\SafeMode;
+use Illuminate\Console\Command;
 
 class StarterSafeModeCommand extends Command
 {

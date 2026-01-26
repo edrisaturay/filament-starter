@@ -2,9 +2,9 @@
 
 namespace EdrisaTuray\FilamentStarter\Filament\Resources;
 
+use EdrisaTuray\FilamentStarter\Models\AuditLog;
 use Filament\Resources\Resource;
 use Filament\Tables\Columns\TextColumn;
-use EdrisaTuray\FilamentStarter\Models\AuditLog;
 
 class AuditLogResource extends Resource
 {

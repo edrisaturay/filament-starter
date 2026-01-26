@@ -2,9 +2,9 @@
 
 namespace EdrisaTuray\FilamentStarter\Filament\Resources\PanelPluginOverrideResource\Pages;
 
+use EdrisaTuray\FilamentStarter\Filament\Resources\PanelPluginOverrideResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
-use EdrisaTuray\FilamentStarter\Filament\Resources\PanelPluginOverrideResource;
 
 class ListPanelPluginOverrides extends ListRecords
 {

@@ -2,12 +2,12 @@
 
 namespace EdrisaTuray\FilamentStarter;
 
-use Illuminate\Support\ServiceProvider;
 use EdrisaTuray\FilamentStarter\Commands\StarterDoctorCommand;
 use EdrisaTuray\FilamentStarter\Commands\StarterInstallCommand;
 use EdrisaTuray\FilamentStarter\Commands\StarterSafeModeCommand;
 use EdrisaTuray\FilamentStarter\Commands\StarterUpdateCommand;
 use EdrisaTuray\FilamentStarter\Http\Middleware\DeveloperGateMiddleware;
+use Illuminate\Support\ServiceProvider;
 
 class StarterServiceProvider extends ServiceProvider
 {

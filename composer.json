@@ -39,7 +39,8 @@
         "tapp/filament-progress-bar-column": "^1.0",
         "guava/filament-knowledge-base": "^3.0",
         "swisnl/filament-backgrounds": "^2.0",
-        "promethys/revive": "^3.0"
+        "promethys/revive": "^3.0",
+        "cocosmos/filament-quick-add-select": "^1.0"
     },
     "autoload": {
         "psr-4": {

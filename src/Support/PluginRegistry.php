@@ -318,6 +318,16 @@ class PluginRegistry
                 'class' => RevivePlugin::class,
                 'package' => 'promethys/revive',
             ],
+            'filament-quick-add-select' => [
+                'label' => 'Quick Add Select',
+                'installer' => fn (Panel $panel, array $options) => $panel, // Component enhancement
+                'default_enabled' => true,
+                'dangerous_to_disable' => false,
+                'requires_migrations' => false,
+                'default_options' => [],
+                'class' => 'Cocosmos\FilamentQuickAddSelect\FilamentQuickAddSelectServiceProvider',
+                'package' => 'cocosmos/filament-quick-add-select',
+            ],
         ];
     }
 

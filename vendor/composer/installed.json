@@ -421,13 +421,13 @@
         },
         {
             "name": "archilex/filament-filter-sets",
-            "version": "5.1.0",
-            "version_normalized": "5.1.0.0",
+            "version": "5.1.1",
+            "version_normalized": "5.1.1.0",
             "dist": {
                 "type": "zip",
-                "url": "https://filament-filter-sets.composer.sh/download/a0e7f306-38f3-4e44-b856-83da762cdc70/advanced-tables-for-filament-5.1.0.zip",
-                "reference": "43f0512d018fb2fea36f3c4576bd01ee813b5a0e",
-                "shasum": "8905cf839ea2c5eeca5d55deaded19da0625dece"
+                "url": "https://filament-filter-sets.composer.sh/download/a0ece984-44fa-4576-a08c-7bf1999d9205/advanced-tables-for-filament-5.1.1.zip",
+                "reference": "cd42f1f7ad1cd9719b0d67ec58e5abcfefab3251",
+                "shasum": "74254ede19e8af2abd40dcade722475aa5c69267"
             },
             "require": {
                 "filament/tables": "^5.1",
@@ -446,7 +446,7 @@
                 "pestphp/pest-plugin-laravel": "^4.0",
                 "spatie/laravel-ray": "^1.29"
             },
-            "time": "2026-01-23T15:05:53+00:00",
+            "time": "2026-01-26T02:18:25+00:00",
             "type": "library",
             "extra": {
                 "laravel": {
@@ -6609,17 +6609,17 @@
         },
         {
             "name": "phpstan/phpdoc-parser",
-            "version": "2.3.1",
-            "version_normalized": "2.3.1.0",
+            "version": "2.3.2",
+            "version_normalized": "2.3.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpstan/phpdoc-parser.git",
-                "reference": "16dbf9937da8d4528ceb2145c9c7c0bd29e26374"
+                "reference": "a004701b11273a26cd7955a61d67a7f1e525a45a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpdoc-parser/zipball/16dbf9937da8d4528ceb2145c9c7c0bd29e26374",
-                "reference": "16dbf9937da8d4528ceb2145c9c7c0bd29e26374",
+                "url": "https://api.github.com/repos/phpstan/phpdoc-parser/zipball/a004701b11273a26cd7955a61d67a7f1e525a45a",
+                "reference": "a004701b11273a26cd7955a61d67a7f1e525a45a",
                 "shasum": ""
             },
             "require": {
@@ -6636,7 +6636,7 @@
                 "phpunit/phpunit": "^9.6",
                 "symfony/process": "^5.2"
             },
-            "time": "2026-01-12T11:33:04+00:00",
+            "time": "2026-01-25T14:56:51+00:00",
             "type": "library",
             "installation-source": "dist",
             "autoload": {
@@ -6653,7 +6653,7 @@
             "description": "PHPDoc parser with support for nullable, intersection and generic types",
             "support": {
                 "issues": "https://github.com/phpstan/phpdoc-parser/issues",
-                "source": "https://github.com/phpstan/phpdoc-parser/tree/2.3.1"
+                "source": "https://github.com/phpstan/phpdoc-parser/tree/2.3.2"
             },
             "install-path": "../phpstan/phpdoc-parser"
         },

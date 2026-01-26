@@ -2,6 +2,10 @@
 
 namespace EdrisaTuray\FilamentStarter\Filament\Resources;
 
+use EdrisaTuray\FilamentStarter\Models\PanelPluginOverride;
+use EdrisaTuray\FilamentStarter\Support\PluginRegistry;
+use EdrisaTuray\FilamentStarter\Support\PluginStateResolver;
+use EdrisaTuray\FilamentStarter\Support\PluginSyncManager;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
@@ -10,10 +14,6 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
-use EdrisaTuray\FilamentStarter\Models\PanelPluginOverride;
-use EdrisaTuray\FilamentStarter\Support\PluginRegistry;
-use EdrisaTuray\FilamentStarter\Support\PluginStateResolver;
-use EdrisaTuray\FilamentStarter\Support\PluginSyncManager;
 
 class PanelPluginOverrideResource extends Resource
 {

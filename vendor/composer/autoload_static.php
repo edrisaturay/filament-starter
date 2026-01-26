@@ -157,8 +157,6 @@ class ComposerStaticInit56409a31d4c6776cd0aef00ffc53722f
             'Rappasoft\\LaravelAuthenticationLog\\' => 35,
             'Ramsey\\Uuid\\' => 12,
             'Ramsey\\Collection\\' => 18,
-            'Raison\\FilamentStarter\\Database\\Seeders\\' => 40,
-            'Raison\\FilamentStarter\\' => 23,
         ),
         'P' => 
         array (
@@ -253,6 +251,8 @@ class ComposerStaticInit56409a31d4c6776cd0aef00ffc53722f
         'E' => 
         array (
             'Egulias\\EmailValidator\\' => 23,
+            'EdrisaTuray\\FilamentStarter\\Database\\Seeders\\' => 45,
+            'EdrisaTuray\\FilamentStarter\\' => 28,
         ),
         'D' => 
         array (
@@ -612,14 +612,6 @@ class ComposerStaticInit56409a31d4c6776cd0aef00ffc53722f
         array (
             0 => __DIR__ . '/..' . '/ramsey/collection/src',
         ),
-        'Raison\\FilamentStarter\\Database\\Seeders\\' => 
-        array (
-            0 => __DIR__ . '/../..' . '/database/seeders',
-        ),
-        'Raison\\FilamentStarter\\' => 
-        array (
-            0 => __DIR__ . '/../..' . '/src',
-        ),
         'Psr\\SimpleCache\\' => 
         array (
             0 => __DIR__ . '/..' . '/psr/simple-cache/src',
@@ -871,6 +863,14 @@ class ComposerStaticInit56409a31d4c6776cd0aef00ffc53722f
         'Egulias\\EmailValidator\\' => 
         array (
             0 => __DIR__ . '/..' . '/egulias/email-validator/src',
+        ),
+        'EdrisaTuray\\FilamentStarter\\Database\\Seeders\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/database/seeders',
+        ),
+        'EdrisaTuray\\FilamentStarter\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/src',
         ),
         'Dotenv\\' => 
         array (

@@ -2,9 +2,9 @@
 
 namespace EdrisaTuray\FilamentStarter\Filament;
 
-use Filament\Panel;
 use EdrisaTuray\FilamentStarter\Support\PluginRegistry;
 use EdrisaTuray\FilamentStarter\Support\PluginStateResolver;
+use Filament\Panel;
 
 class PlatformPanelFactory
 {

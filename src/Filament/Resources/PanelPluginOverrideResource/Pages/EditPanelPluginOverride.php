@@ -2,9 +2,9 @@
 
 namespace EdrisaTuray\FilamentStarter\Filament\Resources\PanelPluginOverrideResource\Pages;
 
+use EdrisaTuray\FilamentStarter\Filament\Resources\PanelPluginOverrideResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
-use EdrisaTuray\FilamentStarter\Filament\Resources\PanelPluginOverrideResource;
 
 class EditPanelPluginOverride extends EditRecord
 {

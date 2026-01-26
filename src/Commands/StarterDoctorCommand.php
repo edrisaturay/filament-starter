@@ -2,8 +2,8 @@
 
 namespace EdrisaTuray\FilamentStarter\Commands;
 
-use Illuminate\Console\Command;
 use EdrisaTuray\FilamentStarter\Support\Doctor;
+use Illuminate\Console\Command;
 
 /**
  * Class StarterDoctorCommand
