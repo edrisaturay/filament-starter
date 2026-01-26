@@ -1,9 +1,9 @@
 <?php
 
-namespace Raison\FilamentStarter\Commands;
+namespace EdrisaTuray\FilamentStarter\Commands;
 
 use Illuminate\Console\Command;
-use Raison\FilamentStarter\Support\Doctor;
+use EdrisaTuray\FilamentStarter\Support\Doctor;
 
 /**
  * Class StarterDoctorCommand

@@ -1,9 +1,9 @@
 <?php
 
-namespace Raison\FilamentStarter\Commands;
+namespace EdrisaTuray\FilamentStarter\Commands;
 
 use Illuminate\Console\Command;
-use Raison\FilamentStarter\Support\SafeMode;
+use EdrisaTuray\FilamentStarter\Support\SafeMode;
 
 class StarterSafeModeCommand extends Command
 {

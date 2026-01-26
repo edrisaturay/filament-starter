@@ -1,6 +1,6 @@
 <?php
 
-namespace Raison\FilamentStarter\Filament\Resources;
+namespace EdrisaTuray\FilamentStarter\Filament\Resources;
 
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
@@ -10,10 +10,10 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
-use Raison\FilamentStarter\Models\PanelPluginOverride;
-use Raison\FilamentStarter\Support\PluginRegistry;
-use Raison\FilamentStarter\Support\PluginStateResolver;
-use Raison\FilamentStarter\Support\PluginSyncManager;
+use EdrisaTuray\FilamentStarter\Models\PanelPluginOverride;
+use EdrisaTuray\FilamentStarter\Support\PluginRegistry;
+use EdrisaTuray\FilamentStarter\Support\PluginStateResolver;
+use EdrisaTuray\FilamentStarter\Support\PluginSyncManager;
 
 class PanelPluginOverrideResource extends Resource
 {
@@ -33,7 +33,7 @@ class PanelPluginOverrideResource extends Resource
         return $form
             ->schema([
                 Select::make('panel_id')
-                    ->options(fn () => \Raison\FilamentStarter\Models\PanelSnapshot::pluck('panel_id', 'panel_id'))
+                    ->options(fn () => \EdrisaTuray\FilamentStarter\Models\PanelSnapshot::pluck('panel_id', 'panel_id'))
                     ->required(),
                 Select::make('plugin_key')
                     ->options(collect(PluginRegistry::getPlugins())->mapWithKeys(fn ($v, $k) => [$k => $v['label']]))
@@ -67,7 +67,7 @@ class PanelPluginOverrideResource extends Resource
             ])
             ->filters([
                 SelectFilter::make('panel_id')
-                    ->options(fn () => \Raison\FilamentStarter\Models\PanelSnapshot::pluck('panel_id', 'panel_id')),
+                    ->options(fn () => \EdrisaTuray\FilamentStarter\Models\PanelSnapshot::pluck('panel_id', 'panel_id')),
                 SelectFilter::make('plugin_key')
                     ->options(collect(PluginRegistry::getPlugins())->mapWithKeys(fn ($v, $k) => [$k => $v['label']])),
                 TernaryFilter::make('enabled'),

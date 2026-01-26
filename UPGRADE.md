@@ -34,11 +34,11 @@ Add the path repository and require the package:
 "repositories": [
     {
         "type": "path",
-        "url": "packages/raison/filament-starter"
+        "url": "packages/edrisaturay/filament-starter"
     }
 ],
 "require": {
-    "raison/filament-starter": "dev-main"
+    "edrisaturay/filament-starter": "dev-main"
 }
 ```
 
@@ -46,7 +46,7 @@ Add the path repository and require the package:
 In your `AdminPanelProvider.php`, remove all managed plugins and add:
 ```php
 ->plugins([
-    \Raison\FilamentStarter\Filament\StarterPlugin::make(),
+    \EdrisaTuray\FilamentStarter\Filament\StarterPlugin::make(),
 ])
 ```
 

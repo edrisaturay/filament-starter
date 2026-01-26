@@ -1,12 +1,12 @@
 <?php
 
-namespace Raison\FilamentStarter\Commands;
+namespace EdrisaTuray\FilamentStarter\Commands;
 
 use Illuminate\Console\Command;
-use Raison\FilamentStarter\Models\PanelPluginOverride;
-use Raison\FilamentStarter\Support\Doctor;
-use Raison\FilamentStarter\Support\PanelSnapshotManager;
-use Raison\FilamentStarter\Support\PluginRegistry;
+use EdrisaTuray\FilamentStarter\Models\PanelPluginOverride;
+use EdrisaTuray\FilamentStarter\Support\Doctor;
+use EdrisaTuray\FilamentStarter\Support\PanelSnapshotManager;
+use EdrisaTuray\FilamentStarter\Support\PluginRegistry;
 
 /**
  * Class StarterInstallCommand
@@ -69,7 +69,7 @@ class StarterInstallCommand extends Command
         $this->updateConfig($tenancy, $multilanguage);
 
         // 5. Mark as installed in DB (using a simple setting or log)
-        \Raison\FilamentStarter\Models\AuditLog::create([
+        \EdrisaTuray\FilamentStarter\Models\AuditLog::create([
             'action' => 'install',
             'after' => [
                 'tenancy' => $tenancy,
@@ -259,7 +259,7 @@ class StarterInstallCommand extends Command
         }
 
         $kbPanelId = 'knowledge-base';
-        $panels = \Raison\FilamentStarter\Models\PanelSnapshot::pluck('panel_id')->toArray();
+        $panels = \EdrisaTuray\FilamentStarter\Models\PanelSnapshot::pluck('panel_id')->toArray();
 
         if (! in_array($kbPanelId, $panels)) {
             $this->warn("Dedicated panel '{$kbPanelId}' not found.");
@@ -287,7 +287,7 @@ class StarterInstallCommand extends Command
 
             if (! in_array('none', $choices)) {
                 foreach ($choices as $panelId) {
-                    \Raison\FilamentStarter\Models\PanelPluginOverride::updateOrCreate(
+                    \EdrisaTuray\FilamentStarter\Models\PanelPluginOverride::updateOrCreate(
                         ['panel_id' => $panelId, 'plugin_key' => 'filament-knowledge-base-companion', 'tenant_id' => null],
                         ['enabled' => true]
                     );
@@ -343,7 +343,7 @@ class StarterInstallCommand extends Command
         $this->line("- 'plugins.backgrounds.my_images_directory' => '{$directory}'");
 
         // 3. Ask which panels should have it enabled
-        $panels = \Raison\FilamentStarter\Models\PanelSnapshot::pluck('panel_id')->toArray();
+        $panels = \EdrisaTuray\FilamentStarter\Models\PanelSnapshot::pluck('panel_id')->toArray();
         $enabledPanels = $this->choice(
             'In which panels should Filament Backgrounds be ENABLED?',
             array_merge(['none', 'all'], $panels),
@@ -356,7 +356,7 @@ class StarterInstallCommand extends Command
             $panelsToEnable = in_array('all', $enabledPanels) ? $panels : $enabledPanels;
 
             foreach ($panelsToEnable as $panelId) {
-                \Raison\FilamentStarter\Models\PanelPluginOverride::updateOrCreate(
+                \EdrisaTuray\FilamentStarter\Models\PanelPluginOverride::updateOrCreate(
                     ['panel_id' => $panelId, 'plugin_key' => 'filament-backgrounds', 'tenant_id' => null],
                     ['enabled' => true]
                 );
@@ -392,7 +392,7 @@ class StarterInstallCommand extends Command
         $userScoping = $this->confirm('Enable User Scoping by default? (Users see only their own deletions)', true);
         $tenantScoping = $this->confirm('Enable Tenant Scoping by default? (Users see deletions within their tenant)', true);
 
-        $panels = \Raison\FilamentStarter\Models\PanelSnapshot::pluck('panel_id')->toArray();
+        $panels = \EdrisaTuray\FilamentStarter\Models\PanelSnapshot::pluck('panel_id')->toArray();
         $adminPanels = $this->choice(
             'Which panels should be "Global Admin Panels"? (See all records regardless of user/tenant)',
             array_merge(['none'], $panels),
@@ -422,7 +422,7 @@ class StarterInstallCommand extends Command
             $panelsToEnable = in_array('all', $enabledPanels) ? $panels : $enabledPanels;
 
             foreach ($panelsToEnable as $panelId) {
-                \Raison\FilamentStarter\Models\PanelPluginOverride::updateOrCreate(
+                \EdrisaTuray\FilamentStarter\Models\PanelPluginOverride::updateOrCreate(
                     ['panel_id' => $panelId, 'plugin_key' => 'filament-revive', 'tenant_id' => null],
                     ['enabled' => true]
                 );

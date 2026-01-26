@@ -1,14 +1,14 @@
 <?php
 
-namespace Raison\FilamentStarter\Filament\Resources;
+namespace EdrisaTuray\FilamentStarter\Filament\Resources;
 
 use Filament\Actions\Action;
 use Filament\Forms\Components\KeyValue;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Tables\Columns\TextColumn;
-use Raison\FilamentStarter\Models\PanelSnapshot;
-use Raison\FilamentStarter\Support\PanelSnapshotManager;
+use EdrisaTuray\FilamentStarter\Models\PanelSnapshot;
+use EdrisaTuray\FilamentStarter\Support\PanelSnapshotManager;
 
 class PanelSnapshotResource extends Resource
 {

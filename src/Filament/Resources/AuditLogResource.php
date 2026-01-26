@@ -1,10 +1,10 @@
 <?php
 
-namespace Raison\FilamentStarter\Filament\Resources;
+namespace EdrisaTuray\FilamentStarter\Filament\Resources;
 
 use Filament\Resources\Resource;
 use Filament\Tables\Columns\TextColumn;
-use Raison\FilamentStarter\Models\AuditLog;
+use EdrisaTuray\FilamentStarter\Models\AuditLog;
 
 class AuditLogResource extends Resource
 {

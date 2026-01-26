@@ -1,6 +1,6 @@
 <?php
 
-namespace Raison\FilamentStarter\Support;
+namespace EdrisaTuray\FilamentStarter\Support;
 
 use Illuminate\Support\Facades\Cache;
 

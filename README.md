@@ -1,5 +1,9 @@
 # Filament Starter Package
 
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/edrisaturay/filament-starter.svg?style=flat-square)](https://packagist.org/packages/edrisaturay/filament-starter)
+[![Total Downloads](https://img.shields.io/packagist/dt/edrisaturay/filament-starter.svg?style=flat-square)](https://packagist.org/packages/edrisaturay/filament-starter)
+[![GitHub](https://img.shields.io/github/license/edrisaturay/filament-starter.svg?style=flat-square)](https://github.com/edrisaturay/filament-starter/blob/main/LICENSE.md)
+
 The core engine of the Filament Starter Kit. This package provides centralized plugin management, multi-panel synchronization, and administrative infrastructure for Filament v5 applications.
 
 ## Key Components
@@ -82,7 +86,7 @@ The package behavior can be customized via `config/filament-starter.php`. Key se
 To use the starter kit in any panel, simply register the `StarterPlugin`:
 
 ```php
-use Raison\FilamentStarter\Filament\StarterPlugin;
+use EdrisaTuray\FilamentStarter\Filament\StarterPlugin;
 
 public function panel(Panel $panel): Panel
 {

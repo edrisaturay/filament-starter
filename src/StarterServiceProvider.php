@@ -1,13 +1,13 @@
 <?php
 
-namespace Raison\FilamentStarter;
+namespace EdrisaTuray\FilamentStarter;
 
 use Illuminate\Support\ServiceProvider;
-use Raison\FilamentStarter\Commands\StarterDoctorCommand;
-use Raison\FilamentStarter\Commands\StarterInstallCommand;
-use Raison\FilamentStarter\Commands\StarterSafeModeCommand;
-use Raison\FilamentStarter\Commands\StarterUpdateCommand;
-use Raison\FilamentStarter\Http\Middleware\DeveloperGateMiddleware;
+use EdrisaTuray\FilamentStarter\Commands\StarterDoctorCommand;
+use EdrisaTuray\FilamentStarter\Commands\StarterInstallCommand;
+use EdrisaTuray\FilamentStarter\Commands\StarterSafeModeCommand;
+use EdrisaTuray\FilamentStarter\Commands\StarterUpdateCommand;
+use EdrisaTuray\FilamentStarter\Http\Middleware\DeveloperGateMiddleware;
 
 class StarterServiceProvider extends ServiceProvider
 {

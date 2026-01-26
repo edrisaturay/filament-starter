@@ -1,9 +1,9 @@
 <?php
 
-namespace Raison\FilamentStarter\Filament\Resources\AuditLogResource\Pages;
+namespace EdrisaTuray\FilamentStarter\Filament\Resources\AuditLogResource\Pages;
 
 use Filament\Resources\Pages\ListRecords;
-use Raison\FilamentStarter\Filament\Resources\AuditLogResource;
+use EdrisaTuray\FilamentStarter\Filament\Resources\AuditLogResource;
 
 class ListAuditLogs extends ListRecords
 {

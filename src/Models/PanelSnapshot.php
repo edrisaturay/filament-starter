@@ -1,6 +1,6 @@
 <?php
 
-namespace Raison\FilamentStarter\Models;
+namespace EdrisaTuray\FilamentStarter\Models;
 
 use Illuminate\Database\Eloquent\Model;
 

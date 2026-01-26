@@ -1,13 +1,13 @@
 <?php
 
-namespace Raison\FilamentStarter\Filament;
+namespace EdrisaTuray\FilamentStarter\Filament;
 
 use Filament\Contracts\Plugin;
 use Filament\Panel;
-use Raison\FilamentStarter\Filament\Resources\AuditLogResource;
-use Raison\FilamentStarter\Filament\Resources\PanelPluginOverrideResource;
-use Raison\FilamentStarter\Filament\Resources\PanelSnapshotResource;
-use Raison\FilamentStarter\Filament\Resources\SystemStatusResource;
+use EdrisaTuray\FilamentStarter\Filament\Resources\AuditLogResource;
+use EdrisaTuray\FilamentStarter\Filament\Resources\PanelPluginOverrideResource;
+use EdrisaTuray\FilamentStarter\Filament\Resources\PanelSnapshotResource;
+use EdrisaTuray\FilamentStarter\Filament\Resources\SystemStatusResource;
 
 class StarterPlugin implements Plugin
 {

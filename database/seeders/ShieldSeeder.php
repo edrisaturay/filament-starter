@@ -1,6 +1,6 @@
 <?php
 
-namespace Raison\FilamentStarter\Database\Seeders;
+namespace EdrisaTuray\FilamentStarter\Database\Seeders;
 
 use BezhanSalleh\FilamentShield\Support\Utils;
 use Illuminate\Database\Seeder;
@@ -28,7 +28,7 @@ class ShieldSeeder extends Seeder
             [
                 'id' => 2,
                 'name' => 'Edrisa',
-                'email' => 'edrisa@raison.africa',
+                'email' => 'edrisa@edrisaturay.com',
                 'email_verified_at' => null,
                 'created_at' => '2026-01-21T15:40:04.000000Z',
                 'updated_at' => '2026-01-21T15:40:04.000000Z',

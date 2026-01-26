@@ -1,6 +1,6 @@
 <?php
 
-namespace Raison\FilamentStarter\Filament\Resources;
+namespace EdrisaTuray\FilamentStarter\Filament\Resources;
 
 use Filament\Resources\Resource;
 use Filament\Tables\Columns\IconColumn;
@@ -8,7 +8,7 @@ use Filament\Tables\Columns\TextColumn;
 
 class SystemStatusResource extends Resource
 {
-    protected static ?string $model = \Raison\FilamentStarter\Models\AuditLog::class;
+    protected static ?string $model = \EdrisaTuray\FilamentStarter\Models\AuditLog::class;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-heart';
 

@@ -1,9 +1,9 @@
 <?php
 
-namespace Raison\FilamentStarter\Models;
+namespace EdrisaTuray\FilamentStarter\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Raison\FilamentStarter\Support\PluginStateResolver;
+use EdrisaTuray\FilamentStarter\Support\PluginStateResolver;
 
 class PanelPluginOverride extends Model
 {
@@ -46,7 +46,7 @@ class PanelPluginOverride extends Model
         static::saved(function ($model) {
             PluginStateResolver::invalidate($model->panel_id, $model->tenant_id);
 
-            \Raison\FilamentStarter\Models\AuditLog::create([
+            \EdrisaTuray\FilamentStarter\Models\AuditLog::create([
                 'actor_user_id' => auth()->id(),
                 'action' => 'update_plugin_state',
                 'panel_id' => $model->panel_id,
@@ -59,7 +59,7 @@ class PanelPluginOverride extends Model
         static::deleted(function ($model) {
             PluginStateResolver::invalidate($model->panel_id, $model->tenant_id);
 
-            \Raison\FilamentStarter\Models\AuditLog::create([
+            \EdrisaTuray\FilamentStarter\Models\AuditLog::create([
                 'actor_user_id' => auth()->id(),
                 'action' => 'delete_plugin_override',
                 'panel_id' => $model->panel_id,

@@ -1,10 +1,10 @@
 <?php
 
-namespace Raison\FilamentStarter\Commands;
+namespace EdrisaTuray\FilamentStarter\Commands;
 
 use Illuminate\Console\Command;
-use Raison\FilamentStarter\Support\OptionSchemaMigrator;
-use Raison\FilamentStarter\Support\PanelSnapshotManager;
+use EdrisaTuray\FilamentStarter\Support\OptionSchemaMigrator;
+use EdrisaTuray\FilamentStarter\Support\PanelSnapshotManager;
 
 class StarterUpdateCommand extends Command
 {

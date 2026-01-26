@@ -1,6 +1,6 @@
 <?php
 
-namespace Raison\FilamentStarter\Http\Middleware;
+namespace EdrisaTuray\FilamentStarter\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;

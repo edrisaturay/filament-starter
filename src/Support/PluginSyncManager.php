@@ -1,10 +1,10 @@
 <?php
 
-namespace Raison\FilamentStarter\Support;
+namespace EdrisaTuray\FilamentStarter\Support;
 
 use Filament\Facades\Filament;
 use Illuminate\Support\Facades\DB;
-use Raison\FilamentStarter\Models\AuditLog;
+use EdrisaTuray\FilamentStarter\Models\AuditLog;
 
 /**
  * Class PluginSyncManager

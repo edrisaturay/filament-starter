@@ -1,6 +1,6 @@
 <?php
 
-namespace Raison\FilamentStarter\Database\Seeders;
+namespace EdrisaTuray\FilamentStarter\Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;

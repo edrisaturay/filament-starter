@@ -1,9 +1,9 @@
 <?php
 
-namespace Raison\FilamentStarter\Filament\Resources\PanelPluginOverrideResource\Pages;
+namespace EdrisaTuray\FilamentStarter\Filament\Resources\PanelPluginOverrideResource\Pages;
 
 use Filament\Resources\Pages\CreateRecord;
-use Raison\FilamentStarter\Filament\Resources\PanelPluginOverrideResource;
+use EdrisaTuray\FilamentStarter\Filament\Resources\PanelPluginOverrideResource;
 
 class CreatePanelPluginOverride extends CreateRecord
 {

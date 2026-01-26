@@ -1,14 +1,19 @@
 {
-    "name": "raison/filament-starter",
+    "name": "edrisaturay/filament-starter",
     "description": "A reusable Filament starter package.",
+    "homepage": "https://github.com/edrisaturay/filament-starter",
     "type": "library",
     "license": "MIT",
     "authors": [
         {
-            "name": "Edrisa",
-            "email": "edrisa@raison.africa"
+            "name": "Edrisa A Turay",
+            "email": "edrisa@edrisa.com"
         }
     ],
+    "support": {
+        "issues": "https://github.com/edrisaturay/filament-starter/issues",
+        "source": "https://github.com/edrisaturay/filament-starter"
+    },
     "require": {
         "php": "^8.3",
         "filament/filament": "^5.0",
@@ -38,14 +43,14 @@
     },
     "autoload": {
         "psr-4": {
-            "Raison\\FilamentStarter\\": "src/",
-            "Raison\\FilamentStarter\\Database\\Seeders\\": "database/seeders/"
+            "EdrisaTuray\\FilamentStarter\\": "src/",
+            "EdrisaTuray\\FilamentStarter\\Database\\Seeders\\": "database/seeders/"
         }
     },
     "extra": {
         "laravel": {
             "providers": [
-                "Raison\\FilamentStarter\\StarterServiceProvider"
+                "EdrisaTuray\\FilamentStarter\\StarterServiceProvider"
             ]
         }
     },

@@ -1,10 +1,10 @@
 <?php
 
-namespace Raison\FilamentStarter\Filament;
+namespace EdrisaTuray\FilamentStarter\Filament;
 
 use Filament\Panel;
-use Raison\FilamentStarter\Support\PluginRegistry;
-use Raison\FilamentStarter\Support\PluginStateResolver;
+use EdrisaTuray\FilamentStarter\Support\PluginRegistry;
+use EdrisaTuray\FilamentStarter\Support\PluginStateResolver;
 
 class PlatformPanelFactory
 {

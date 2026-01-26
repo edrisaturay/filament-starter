@@ -1,6 +1,6 @@
 <?php
 
-namespace Raison\FilamentStarter\Support;
+namespace EdrisaTuray\FilamentStarter\Support;
 
 /**
  * Class Doctor
@@ -66,7 +66,7 @@ class Doctor
                 $message = "Package {$definition['package']} might be missing (Class {$class} not found).";
 
                 // If enabled for any panel, mark as critical
-                $panels = \Raison\FilamentStarter\Models\PanelSnapshot::pluck('panel_id')->toArray();
+                $panels = \EdrisaTuray\FilamentStarter\Models\PanelSnapshot::pluck('panel_id')->toArray();
                 foreach ($panels as $panelId) {
                     $states = PluginStateResolver::resolve($panelId);
                     if (($states[$key]['enabled'] ?? false)) {

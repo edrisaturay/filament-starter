@@ -1,10 +1,10 @@
 <?php
 
-namespace Raison\FilamentStarter\Filament\Resources\SystemStatusResource\Pages;
+namespace EdrisaTuray\FilamentStarter\Filament\Resources\SystemStatusResource\Pages;
 
 use Filament\Resources\Pages\ListRecords;
-use Raison\FilamentStarter\Filament\Resources\SystemStatusResource;
-use Raison\FilamentStarter\Support\Doctor;
+use EdrisaTuray\FilamentStarter\Filament\Resources\SystemStatusResource;
+use EdrisaTuray\FilamentStarter\Support\Doctor;
 
 class ListSystemStatuses extends ListRecords
 {

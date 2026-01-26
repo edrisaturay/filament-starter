@@ -1,6 +1,6 @@
 <?php
 
-namespace Raison\FilamentStarter\Http\Controllers;
+namespace EdrisaTuray\FilamentStarter\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;

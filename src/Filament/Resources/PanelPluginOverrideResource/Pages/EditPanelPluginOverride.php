@@ -1,10 +1,10 @@
 <?php
 
-namespace Raison\FilamentStarter\Filament\Resources\PanelPluginOverrideResource\Pages;
+namespace EdrisaTuray\FilamentStarter\Filament\Resources\PanelPluginOverrideResource\Pages;
 
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
-use Raison\FilamentStarter\Filament\Resources\PanelPluginOverrideResource;
+use EdrisaTuray\FilamentStarter\Filament\Resources\PanelPluginOverrideResource;
 
 class EditPanelPluginOverride extends EditRecord
 {
