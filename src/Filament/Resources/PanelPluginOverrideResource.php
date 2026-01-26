@@ -33,7 +33,16 @@ class PanelPluginOverrideResource extends Resource
         return $form
             ->schema([
                 Select::make('panel_id')
-                    ->options(fn () => \EdrisaTuray\FilamentStarter\Models\PanelSnapshot::pluck('panel_id', 'panel_id'))
+                    ->options(function () {
+                        $snapshots = \EdrisaTuray\FilamentStarter\Models\PanelSnapshot::pluck('panel_id', 'panel_id')->toArray();
+                        if (empty($snapshots)) {
+                            return collect(\Filament\Facades\Filament::getPanels())
+                                ->mapWithKeys(fn ($panel) => [$panel->getId() => $panel->getId()])
+                                ->toArray();
+                        }
+
+                        return $snapshots;
+                    })
                     ->required(),
                 Select::make('plugin_key')
                     ->options(collect(PluginRegistry::getPlugins())->mapWithKeys(fn ($v, $k) => [$k => $v['label']]))
@@ -67,7 +76,16 @@ class PanelPluginOverrideResource extends Resource
             ])
             ->filters([
                 SelectFilter::make('panel_id')
-                    ->options(fn () => \EdrisaTuray\FilamentStarter\Models\PanelSnapshot::pluck('panel_id', 'panel_id')),
+                    ->options(function () {
+                        $snapshots = \EdrisaTuray\FilamentStarter\Models\PanelSnapshot::pluck('panel_id', 'panel_id')->toArray();
+                        if (empty($snapshots)) {
+                            return collect(\Filament\Facades\Filament::getPanels())
+                                ->mapWithKeys(fn ($panel) => [$panel->getId() => $panel->getId()])
+                                ->toArray();
+                        }
+
+                        return $snapshots;
+                    }),
                 SelectFilter::make('plugin_key')
                     ->options(collect(PluginRegistry::getPlugins())->mapWithKeys(fn ($v, $k) => [$k => $v['label']])),
                 TernaryFilter::make('enabled'),
