@@ -131,7 +131,11 @@ class StarterInstallCommand extends Command
                 $toPublish = array_keys($plugins);
             } else {
                 // Map labels back to keys
-                $labelToKey = array_flip(collect($plugins)->map(fn ($p) => $p['label'])->toArray());
+                $labelToKey = [];
+                foreach ($plugins as $key => $definition) {
+                    $labelToKey[$definition['label']] = $key;
+                }
+
                 $toPublish = collect($toPublish)->map(fn ($label) => $labelToKey[$label] ?? null)->filter()->toArray();
             }
         }
@@ -177,8 +181,12 @@ class StarterInstallCommand extends Command
                 true
             );
 
-            $labelToKey = array_flip(collect($plugins)->map(fn ($p) => $p['label'])->toArray());
-            $selectedKeys = collect($selected)->map(fn ($label) => $labelToKey[$label])->toArray();
+            $labelToKey = [];
+            foreach ($plugins as $key => $definition) {
+                $labelToKey[$definition['label']] = $key;
+            }
+
+            $selectedKeys = collect($selected)->map(fn ($label) => $labelToKey[$label] ?? null)->filter()->toArray();
 
             foreach ($plugins as $key => $definition) {
                 $isEnabled = in_array($key, $selectedKeys);
@@ -210,8 +218,12 @@ class StarterInstallCommand extends Command
             true
         );
 
-        $labelToKey = array_flip(collect($plugins)->map(fn ($p) => $p['label'])->toArray());
-        $selectedKeys = collect($selected)->map(fn ($label) => $labelToKey[$label])->toArray();
+        $labelToKey = [];
+        foreach ($plugins as $key => $definition) {
+            $labelToKey[$definition['label']] = $key;
+        }
+
+        $selectedKeys = collect($selected)->map(fn ($label) => $labelToKey[$label] ?? null)->filter()->toArray();
 
         foreach ($selectedKeys as $key) {
             // Apply to all managed panels
