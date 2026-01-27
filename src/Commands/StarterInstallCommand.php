@@ -113,7 +113,7 @@ class StarterInstallCommand extends Command
     protected function publishPluginConfigs(array $plugins, array $options): void
     {
         if ($this->option('publish-all')) {
-            $toPublish = array_keys($options);
+            $toPublish = array_keys($plugins);
         } else {
             $toPublish = $this->choice(
                 'Which plugin config files should be published? (comma separated indices)',
@@ -128,7 +128,7 @@ class StarterInstallCommand extends Command
             }
 
             if (in_array('all', $toPublish)) {
-                $toPublish = array_keys($options);
+                $toPublish = array_keys($plugins);
             } else {
                 // Map labels back to keys
                 $labelToKey = array_flip(collect($plugins)->map(fn ($p) => $p['label'])->toArray());
