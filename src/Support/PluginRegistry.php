@@ -414,6 +414,6 @@ class PluginRegistry
         // 2. Fallback to registry
         $plugins = static::getPlugins();
 
-        return $plugins[$key]['dangerous_to_disable'] ?? false;
+        return isset($plugins[$key]) ? ($plugins[$key]['dangerous_to_disable'] ?? false) : false;
     }
 }

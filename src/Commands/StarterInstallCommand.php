@@ -141,12 +141,17 @@ class StarterInstallCommand extends Command
         }
 
         foreach ($toPublish as $key) {
-            $package = $plugins[$key]['package'] ?? null;
+            $definition = $plugins[$key] ?? null;
+            if (! $definition) {
+                continue;
+            }
+
+            $package = $definition['package'] ?? null;
             if ($package) {
-                $this->info("Publishing config for {$plugins[$key]['label']}...");
+                $this->info("Publishing config for {$definition['label']}...");
                 // In a real scenario, we'd need the actual provider or tag.
                 // We'll attempt a generic publish by provider if available in registry
-                $class = $plugins[$key]['class'] ?? null;
+                $class = $definition['class'] ?? null;
                 if ($class) {
                     $this->call('vendor:publish', [
                         '--provider' => $class,
