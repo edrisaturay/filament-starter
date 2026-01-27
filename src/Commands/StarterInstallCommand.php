@@ -7,6 +7,7 @@ use EdrisaTuray\FilamentStarter\Support\Doctor;
 use EdrisaTuray\FilamentStarter\Support\PanelSnapshotManager;
 use EdrisaTuray\FilamentStarter\Support\PluginRegistry;
 use Illuminate\Console\Command;
+use function Laravel\Prompts\multiselect;
 
 /**
  * Class StarterInstallCommand
@@ -51,6 +52,9 @@ class StarterInstallCommand extends Command
 
         // 3. Interactive Plugin Configuration
         $this->configurePlugins();
+
+        // 3.2. Shield Setup
+        $this->setupShield();
 
         // 3.5. Knowledge Base Setup
         $this->setupKnowledgeBase();
@@ -117,12 +121,10 @@ class StarterInstallCommand extends Command
         if ($this->option('publish-all')) {
             $toPublish = array_keys($plugins);
         } else {
-            $toPublish = $this->choice(
-                'Which plugin config files should be published? (comma separated indices)',
+            $toPublish = $this->multiSelect(
+                'Which plugin config files should be published?',
                 array_merge(['none' => 'none', 'all' => 'all'], $options),
-                'none',
-                null,
-                true
+                ['none']
             );
 
             if (in_array('none', $toPublish)) {
@@ -171,12 +173,10 @@ class StarterInstallCommand extends Command
                 ->values()
                 ->toArray();
 
-            $selected = $this->choice(
+            $selected = $this->multiSelect(
                 "Which plugins should be ENABLED in the '{$panelId}' panel?",
                 $options,
-                implode(',', $enabledInRegistry),
-                null,
-                true
+                $enabledInRegistry
             );
 
             foreach ($plugins as $key => $definition) {
@@ -201,12 +201,10 @@ class StarterInstallCommand extends Command
             ->values()
             ->toArray();
 
-        $selected = $this->choice(
+        $selected = $this->multiSelect(
             'Which plugins should be marked as DANGEROUS to disable? (These will be forced to enabled)',
             $options,
-            implode(',', $dangerousInRegistry),
-            null,
-            true
+            $dangerousInRegistry
         );
 
         foreach ($selected as $key) {
@@ -324,6 +322,37 @@ class StarterInstallCommand extends Command
                 }
             }
         }
+    }
+
+    /**
+     * Interactive setup for Filament Shield.
+     */
+    protected function setupShield(): void
+    {
+        if ($this->option('no-interaction')) {
+            return;
+        }
+
+        $this->newLine();
+        $this->info('--- Filament Shield Setup ---');
+        $this->call('shield:setup');
+    }
+
+    /**
+     * Prompt for multi-select choices with a spacebar-friendly UI.
+     *
+     * @param  array<int|string, string>  $options
+     * @param  array<int|string>  $default
+     * @return array<int|string>
+     */
+    protected function multiSelect(string $label, array $options, array $default = []): array
+    {
+        return multiselect(
+            label: $label,
+            options: $options,
+            default: $default,
+            scroll: 12,
+        );
     }
 
     /**
