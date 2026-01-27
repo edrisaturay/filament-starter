@@ -120,7 +120,7 @@ class StarterInstallCommand extends Command
             $toPublish = $this->choice(
                 'Which plugin config files should be published? (comma separated indices)',
                 array_merge(['none' => 'none', 'all' => 'all'], $options),
-                0,
+                'none',
                 null,
                 true
             );
@@ -167,7 +167,6 @@ class StarterInstallCommand extends Command
             $this->info("Configuring plugins for panel: {$panelId}");
 
             $enabledInRegistry = collect($plugins)
-                ->filter(fn ($p) => $p['default_enabled'])
                 ->keys()
                 ->values()
                 ->toArray();
@@ -175,7 +174,7 @@ class StarterInstallCommand extends Command
             $selected = $this->choice(
                 "Which plugins should be ENABLED in the '{$panelId}' panel?",
                 $options,
-                $enabledInRegistry,
+                implode(',', $enabledInRegistry),
                 null,
                 true
             );
@@ -205,7 +204,7 @@ class StarterInstallCommand extends Command
         $selected = $this->choice(
             'Which plugins should be marked as DANGEROUS to disable? (These will be forced to enabled)',
             $options,
-            $dangerousInRegistry,
+            implode(',', $dangerousInRegistry),
             null,
             true
         );
