@@ -95,7 +95,9 @@ class StarterInstallCommand extends Command
         }
 
         $plugins = PluginRegistry::getPlugins();
-        $pluginOptions = collect($plugins)->map(fn ($p) => $p['label'])->toArray();
+        $pluginOptions = collect($plugins)
+            ->mapWithKeys(fn ($definition, $key) => [$key => $definition['label']])
+            ->toArray();
 
         // 1. Publish Configs
         $this->publishPluginConfigs($plugins, $pluginOptions);
@@ -117,7 +119,7 @@ class StarterInstallCommand extends Command
         } else {
             $toPublish = $this->choice(
                 'Which plugin config files should be published? (comma separated indices)',
-                array_merge(['none', 'all'], array_values($options)),
+                array_merge(['none' => 'none', 'all' => 'all'], $options),
                 0,
                 null,
                 true
@@ -129,14 +131,6 @@ class StarterInstallCommand extends Command
 
             if (in_array('all', $toPublish)) {
                 $toPublish = array_keys($plugins);
-            } else {
-                // Map labels back to keys
-                $labelToKey = [];
-                foreach ($plugins as $key => $definition) {
-                    $labelToKey[$definition['label']] = $key;
-                }
-
-                $toPublish = collect($toPublish)->map(fn ($label) => $labelToKey[$label] ?? null)->filter()->toArray();
             }
         }
 
@@ -174,27 +168,20 @@ class StarterInstallCommand extends Command
 
             $enabledInRegistry = collect($plugins)
                 ->filter(fn ($p) => $p['default_enabled'])
-                ->map(fn ($p) => $p['label'])
+                ->keys()
                 ->values()
                 ->toArray();
 
             $selected = $this->choice(
                 "Which plugins should be ENABLED in the '{$panelId}' panel?",
-                array_values($options),
-                implode(',', $enabledInRegistry),
+                $options,
+                $enabledInRegistry,
                 null,
                 true
             );
 
-            $labelToKey = [];
             foreach ($plugins as $key => $definition) {
-                $labelToKey[$definition['label']] = $key;
-            }
-
-            $selectedKeys = collect($selected)->map(fn ($label) => $labelToKey[$label] ?? null)->filter()->toArray();
-
-            foreach ($plugins as $key => $definition) {
-                $isEnabled = in_array($key, $selectedKeys);
+                $isEnabled = in_array($key, $selected);
 
                 PanelPluginOverride::updateOrCreate(
                     ['panel_id' => $panelId, 'plugin_key' => $key, 'tenant_id' => null],
@@ -211,26 +198,19 @@ class StarterInstallCommand extends Command
     {
         $dangerousInRegistry = collect($plugins)
             ->filter(fn ($p) => $p['dangerous_to_disable'])
-            ->map(fn ($p) => $p['label'])
+            ->keys()
             ->values()
             ->toArray();
 
         $selected = $this->choice(
             'Which plugins should be marked as DANGEROUS to disable? (These will be forced to enabled)',
-            array_values($options),
-            implode(',', $dangerousInRegistry),
+            $options,
+            $dangerousInRegistry,
             null,
             true
         );
 
-        $labelToKey = [];
-        foreach ($plugins as $key => $definition) {
-            $labelToKey[$definition['label']] = $key;
-        }
-
-        $selectedKeys = collect($selected)->map(fn ($label) => $labelToKey[$label] ?? null)->filter()->toArray();
-
-        foreach ($selectedKeys as $key) {
+        foreach ($selected as $key) {
             // Apply to all managed panels
             $managedPanels = config('filament-starter.managed_panels', []);
             foreach ($managedPanels as $panelId) {
