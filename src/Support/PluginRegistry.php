@@ -26,6 +26,7 @@ use Swis\Filament\Backgrounds\ImageProviders\CuratedBySwis;
 use Swis\Filament\Backgrounds\ImageProviders\MyImages;
 use Swis\Filament\Backgrounds\ImageProviders\Triangles;
 use Tapp\FilamentAuthenticationLog\FilamentAuthenticationLogPlugin;
+use TomatoPHP\FilamentUsers\FilamentUsersPlugin;
 use WatheqAlshowaiter\FilamentStickyTableHeader\StickyTableHeaderPlugin;
 
 /**
@@ -327,7 +328,7 @@ class PluginRegistry
                 'dangerous_to_disable' => false,
                 'requires_migrations' => false,
                 'default_options' => [],
-                'class' => 'Cocosmos\FilamentQuickAddSelect\FilamentQuickAddSelectServiceProvider',
+                'class' => \Cocosmos\FilamentQuickAddSelect\FilamentQuickAddServiceProvider::class,
                 'package' => 'cocosmos/filament-quick-add-select',
             ],
             'filament-ai-chat-agent' => [
@@ -359,6 +360,16 @@ class PluginRegistry
                 'default_options' => [],
                 'class' => 'EdrisaTuray\FilamentNaturalLanguageFilter\FilamentNaturalLanguageFilterServiceProvider',
                 'package' => 'edrisaturay/filament-natural-language-filter',
+            ],
+            'filament-users' => [
+                'label' => 'Filament Users',
+                'installer' => fn (Panel $panel, array $options) => $panel->plugin(FilamentUsersPlugin::make()),
+                'default_enabled' => true,
+                'dangerous_to_disable' => false,
+                'requires_migrations' => false,
+                'default_options' => [],
+                'class' => FilamentUsersPlugin::class,
+                'package' => 'tomatophp/filament-users',
             ],
         ];
     }
