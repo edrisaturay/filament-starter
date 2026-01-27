@@ -6,6 +6,25 @@
 
 The core engine of the Filament Starter Kit. This package provides centralized plugin management, multi-panel synchronization, and administrative infrastructure for Filament v5 applications.
 
+### Installation
+
+You can install the package via composer:
+
+```bash
+composer require edrisaturay/filament-starter:dev-main
+```
+
+**Note:** Since this package depends on `archilex/filament-filter-sets`, you must add its custom repository to your root `composer.json` before installing:
+
+```json
+"repositories": [
+    {
+        "type": "composer",
+        "url": "https://filament-filter-sets.composer.sh"
+    }
+]
+```
+
 ## Key Components
 
 ### 1. Plugin Registry (`Support/PluginRegistry.php`)
