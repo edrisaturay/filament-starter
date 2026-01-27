@@ -27,6 +27,7 @@ use Swis\Filament\Backgrounds\ImageProviders\MyImages;
 use Swis\Filament\Backgrounds\ImageProviders\Triangles;
 use Tapp\FilamentAuthenticationLog\FilamentAuthenticationLogPlugin;
 use TomatoPHP\FilamentUsers\FilamentUsersPlugin;
+use BezhanSalleh\PanelSwitch\PanelSwitch;
 use WatheqAlshowaiter\FilamentStickyTableHeader\StickyTableHeaderPlugin;
 
 /**
@@ -363,13 +364,23 @@ class PluginRegistry
             ],
             'filament-users' => [
                 'label' => 'Filament Users',
-                'installer' => fn (Panel $panel, array $options) => $panel->plugin(FilamentUsersPlugin::make()),
+                'installer' => fn (Panel $panel, array $options) => $panel, // Registered manually in Panel Providers for now due to routing issues
                 'default_enabled' => true,
                 'dangerous_to_disable' => false,
                 'requires_migrations' => false,
                 'default_options' => [],
                 'class' => FilamentUsersPlugin::class,
                 'package' => 'tomatophp/filament-users',
+            ],
+            'filament-panel-switch' => [
+                'label' => 'Panel Switcher',
+                'installer' => fn (Panel $panel, array $options) => $panel, // Configured globally in Service Provider
+                'default_enabled' => true,
+                'dangerous_to_disable' => false,
+                'requires_migrations' => false,
+                'default_options' => [],
+                'class' => 'BezhanSalleh\PanelSwitch\PanelSwitchServiceProvider',
+                'package' => 'bezhansalleh/filament-panel-switch',
             ],
         ];
     }

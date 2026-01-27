@@ -74,6 +74,17 @@ During `starter:install`, you can now:
 2. **Activate Plugins per Panel**: Select exactly which plugins should be enabled for each of your managed panels.
 3. **Mark Dangerous Plugins**: Identify plugins that are critical for your system. Once marked, these plugins cannot be disabled via the UI, ensuring system stability.
 
+## Dynamic Panel Switcher
+The starter kit now includes a high-performance **Panel Switcher** powered by `bezhansalleh/filament-panel-switch`.
+
+- **Seamless Transition**: Shift between "Control Center" (Admin) and "Operations" (Staff) with a sleek modal or slide-over interface.
+- **Auto-Discovery**: Automatically lists all your panels or only those you've explicitly enabled via the Plugin Management UI.
+- **Themed UI**: Includes custom icons (Shield, Identification, Book) and labels out of the box.
+- **Theme Requirements**: To ensure the switcher looks great, add the following to your custom `theme.css`:
+    ```css
+    @source '../../../../vendor/bezhansalleh/filament-panel-switch/resources/views/**/*.blade.php';
+    ```
+
 ## Configuration
 
 The package behavior can be customized via `config/filament-starter.php`. Key settings include:
