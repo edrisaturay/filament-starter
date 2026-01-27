@@ -14,6 +14,20 @@ You can install the package via composer:
 composer require edrisaturay/filament-starter:dev-main
 ```
 
+#### Troubleshooting Dependency Conflicts
+
+If you encounter a conflict with `webmozart/assert` (e.g., when it is locked to `^2.0` in your project), you may need to allow Composer to downgrade it to `1.12.1`, which is the version required by many core Laravel and Filament dependencies (like `spatie/laravel-data` via `phpdocumentor/reflection`).
+
+Try running:
+```bash
+composer require edrisaturay/filament-starter:dev-main -W
+```
+
+If that fails, you can manually set the version of `webmozart/assert` in your root `composer.json` before installing:
+```bash
+composer require webmozart/assert:1.12.1
+```
+
 **Note:** Since this package depends on `archilex/filament-filter-sets`, you must add its custom repository to your root `composer.json` before installing:
 
 ```json
