@@ -85,6 +85,27 @@ class StarterUpdateCommand extends Command
                 'migration_glob' => '*_create_breezy_sessions_table.php',
             ],
             [
+                'label' => 'Filament Email',
+                'table' => 'filament_email_log',
+                'tag' => 'filament-email-migrations',
+                'provider' => \RickDBCN\FilamentEmail\FilamentEmailServiceProvider::class,
+                'migration_glob' => '*_create_filament_email_table.php',
+            ],
+            [
+                'label' => 'Advanced Tables (Filter Sets)',
+                'table' => 'filament_filter_sets',
+                'tag' => 'advanced-tables-migrations',
+                'provider' => \Archilex\AdvancedTables\AdvancedTablesServiceProvider::class,
+                'migration_glob' => '*_create_filament_filter_sets_table.php',
+            ],
+            [
+                'label' => 'Spatie Health',
+                'table' => 'health_check_result_history_items',
+                'tag' => 'laravel-health-migrations',
+                'provider' => \Spatie\Health\HealthServiceProvider::class,
+                'migration_glob' => '*_create_health_tables.php',
+            ],
+            [
                 'label' => 'Filament Jobs Monitor',
                 'table' => 'queue_monitors',
                 'tag' => 'filament-jobs-monitor-migrations',

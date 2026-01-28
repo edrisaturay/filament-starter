@@ -56,6 +56,15 @@ class Doctor
         // Check Authentication Log setup
         $results = array_merge($results, $this->checkAuthenticationLogSetup());
 
+        // Check Filament Email setup
+        $results = array_merge($results, $this->checkFilamentEmailSetup());
+
+        // Check Advanced Tables (Filter Sets) setup
+        $results = array_merge($results, $this->checkFilterSetsSetup());
+
+        // Check Spatie Health setup
+        $results = array_merge($results, $this->checkHealthSetup());
+
         // Check for Sanctum
         $results = array_merge($results, $this->checkSanctumSetup());
 
@@ -289,6 +298,24 @@ class Doctor
         return \Illuminate\Support\Facades\Schema::hasTable($table);
     }
 
+    protected function hasFilamentEmailTable(): bool
+    {
+        return \Illuminate\Support\Facades\Schema::hasTable('filament_email_log');
+    }
+
+    protected function hasFilterSetsTables(): bool
+    {
+        $schema = \Illuminate\Support\Facades\Schema::class;
+
+        return $schema::hasTable('filament_filter_sets')
+            && $schema::hasTable('filament_filter_set_user');
+    }
+
+    protected function hasHealthTables(): bool
+    {
+        return \Illuminate\Support\Facades\Schema::hasTable('health_check_result_history_items');
+    }
+
     /**
      * Check that Spatie Activitylog table exists when LogsActivity is used.
      *
@@ -338,6 +365,84 @@ class Doctor
     }
 
     /**
+     * Check that Filament Email migrations are installed when enabled.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    protected function checkFilamentEmailSetup(): array
+    {
+        if (! $this->isPluginEnabled('filament-email')) {
+            return [];
+        }
+
+        if (! $this->hasFilamentEmailTable()) {
+            return [[
+                'check' => 'Filament Email Migration',
+                'status' => 'critical',
+                'message' => "Filament Email table is missing. Run 'php artisan vendor:publish --provider=\"RickDBCN\\FilamentEmail\\FilamentEmailServiceProvider\" --tag=\"filament-email-migrations\"' then 'php artisan migrate'.",
+            ]];
+        }
+
+        return [[
+            'check' => 'Filament Email Migration',
+            'status' => 'ok',
+            'message' => 'Filament Email migrations are installed.',
+        ]];
+    }
+
+    /**
+     * Check that Advanced Tables (Filter Sets) migrations are installed when enabled.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    protected function checkFilterSetsSetup(): array
+    {
+        if (! $this->isPluginEnabled('filter-sets')) {
+            return [];
+        }
+
+        if (! $this->hasFilterSetsTables()) {
+            return [[
+                'check' => 'Filter Sets Migration',
+                'status' => 'critical',
+                'message' => "Filter Sets tables are missing. Run 'php artisan vendor:publish --provider=\"Archilex\\AdvancedTables\\AdvancedTablesServiceProvider\" --tag=\"advanced-tables-migrations\"' then 'php artisan migrate'.",
+            ]];
+        }
+
+        return [[
+            'check' => 'Filter Sets Migration',
+            'status' => 'ok',
+            'message' => 'Filter Sets migrations are installed.',
+        ]];
+    }
+
+    /**
+     * Check that Spatie Health migrations are installed when enabled.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    protected function checkHealthSetup(): array
+    {
+        if (! $this->isPluginEnabled('filament-health')) {
+            return [];
+        }
+
+        if (! $this->hasHealthTables()) {
+            return [[
+                'check' => 'Health Migration',
+                'status' => 'critical',
+                'message' => "Spatie Health tables are missing. Run 'php artisan vendor:publish --provider=\"Spatie\\Health\\HealthServiceProvider\" --tag=\"laravel-health-migrations\"' then 'php artisan migrate'.",
+            ]];
+        }
+
+        return [[
+            'check' => 'Health Migration',
+            'status' => 'ok',
+            'message' => 'Spatie Health migrations are installed.',
+        ]];
+    }
+
+    /**
      * @return array<int, string>
      */
     protected function getPanelIds(): array
@@ -351,6 +456,18 @@ class Doctor
     protected function resolvePluginStates(string $panelId): array
     {
         return PluginStateResolver::resolve($panelId);
+    }
+
+    protected function isPluginEnabled(string $key): bool
+    {
+        foreach ($this->getPanelIds() as $panelId) {
+            $states = $this->resolvePluginStates($panelId);
+            if (($states[$key]['enabled'] ?? false)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     protected function hasSanctumConfig(): bool
