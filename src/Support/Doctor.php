@@ -47,6 +47,9 @@ class Doctor
             'message' => $filamentInstalled ? 'Filament v5 is present.' : 'Filament v5 is MISSING.',
         ];
 
+        // Check for Breezy setup
+        $results = array_merge($results, $this->checkBreezySetup());
+
         // Check for Sanctum
         $results = array_merge($results, $this->checkSanctumSetup());
 
@@ -207,6 +210,69 @@ class Doctor
             'status' => 'ok',
             'message' => 'Laravel Sanctum is installed.',
         ]];
+    }
+
+    /**
+     * Check that Filament Breezy migrations are installed when enabled.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    protected function checkBreezySetup(): array
+    {
+        if (! class_exists(\Jeffgreco13\FilamentBreezy\BreezyCore::class)) {
+            return [];
+        }
+
+        $breezyKey = 'filament-breezy';
+        $panels = $this->getPanelIds();
+
+        $isEnabled = false;
+        foreach ($panels as $panelId) {
+            $states = $this->resolvePluginStates($panelId);
+            if (($states[$breezyKey]['enabled'] ?? false)) {
+                $isEnabled = true;
+                break;
+            }
+        }
+
+        if (! $isEnabled) {
+            return [];
+        }
+
+        if (! $this->hasBreezySessionsTable()) {
+            return [[
+                'check' => 'Breezy Migration',
+                'status' => 'critical',
+                'message' => "Breezy sessions table is missing. Run 'php artisan breezy:install' or publish the migrations and run 'php artisan migrate'.",
+            ]];
+        }
+
+        return [[
+            'check' => 'Breezy Migration',
+            'status' => 'ok',
+            'message' => 'Breezy migrations are installed.',
+        ]];
+    }
+
+    protected function hasBreezySessionsTable(): bool
+    {
+        return \Illuminate\Support\Facades\Schema::hasTable('breezy_sessions');
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    protected function getPanelIds(): array
+    {
+        return \Illuminate\Support\Facades\DB::table('starter_panel_snapshots')->pluck('panel_id')->toArray();
+    }
+
+    /**
+     * @return array<string, array<string, mixed>>
+     */
+    protected function resolvePluginStates(string $panelId): array
+    {
+        return PluginStateResolver::resolve($panelId);
     }
 
     protected function hasSanctumConfig(): bool

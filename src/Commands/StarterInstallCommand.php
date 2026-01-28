@@ -43,11 +43,14 @@ class StarterInstallCommand extends Command
 
         $this->info('Starting Starter Platform installation...');
 
-        // 1. Run migrations
-        $this->call('migrate', ['--force' => true]);
-
-        // 1.1 Ensure Sanctum is installed
+        // 1. Ensure Sanctum is installed
         $this->ensureSanctumInstalled();
+
+        // 1.1 Ensure Breezy is installed
+        $this->ensureBreezyInstalled();
+
+        // 2. Run migrations
+        $this->call('migrate', ['--force' => true]);
 
         // 2. Snapshot panels and sync plugins
         $this->info('Snapshotting panels and syncing plugins...');
@@ -357,6 +360,47 @@ class StarterInstallCommand extends Command
     protected function hasSanctumConfig(): bool
     {
         return file_exists(config_path('sanctum.php'));
+    }
+
+    /**
+     * Ensure Filament Breezy migrations are available before migrating.
+     */
+    protected function ensureBreezyInstalled(): void
+    {
+        if (! class_exists(\Jeffgreco13\FilamentBreezy\BreezyCore::class)) {
+            return;
+        }
+
+        if ($this->hasBreezySessionsTable()) {
+            return;
+        }
+
+        if (! $this->hasBreezyMigrations()) {
+            $this->info('Publishing Filament Breezy migrations...');
+            $this->call('vendor:publish', [
+                '--tag' => 'filament-breezy-migrations',
+            ]);
+        }
+    }
+
+    protected function hasBreezyMigrations(): bool
+    {
+        $migrationPath = database_path('migrations');
+
+        if (! is_dir($migrationPath)) {
+            return false;
+        }
+
+        foreach (glob($migrationPath.'/*_create_breezy_sessions_table.php') as $file) {
+            return true;
+        }
+
+        return false;
+    }
+
+    protected function hasBreezySessionsTable(): bool
+    {
+        return \Illuminate\Support\Facades\Schema::hasTable('breezy_sessions');
     }
 
     /**
