@@ -11,7 +11,7 @@ class PluginStateResolver
     {
         $cacheKey = "starter_plugins_{$panelId}".($tenantId ? "_{$tenantId}" : '');
 
-        return Cache::rememberForever($cacheKey, function () use ($panelId, $tenantId) {
+        $computeState = function () use ($panelId, $tenantId): array {
             $registry = PluginRegistry::getPlugins();
             $resolved = [];
 
@@ -59,7 +59,15 @@ class PluginStateResolver
             }
 
             return $resolved;
-        });
+        };
+
+        try {
+            return Cache::rememberForever($cacheKey, $computeState);
+        } catch (\Throwable $exception) {
+            report($exception);
+
+            return $computeState();
+        }
     }
 
     public static function invalidate(string $panelId, ?string $tenantId = null): void

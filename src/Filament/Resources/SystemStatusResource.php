@@ -2,13 +2,14 @@
 
 namespace EdrisaTuray\FilamentStarter\Filament\Resources;
 
+use EdrisaTuray\FilamentStarter\Support\Doctor;
 use Filament\Resources\Resource;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 
 class SystemStatusResource extends Resource
 {
-    protected static ?string $model = \EdrisaTuray\FilamentStarter\Models\AuditLog::class;
+    protected static ?string $model = \EdrisaTuray\FilamentStarter\Models\PanelSnapshot::class;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-heart';
 
@@ -19,6 +20,11 @@ class SystemStatusResource extends Resource
     public static function table(\Filament\Tables\Table $table): \Filament\Tables\Table
     {
         return $table
+            ->modelLabel('System Check')
+            ->pluralModelLabel('System Checks')
+            ->query(null)
+            ->records(fn () => collect(app(Doctor::class)->check()))
+            ->paginated(false)
             ->columns([
                 TextColumn::make('check'),
                 IconColumn::make('status')

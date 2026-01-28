@@ -25,6 +25,19 @@ class Doctor
             'message' => config('filament-starter.installed') ? 'Platform is initialized.' : 'Platform needs to run starter:install.',
         ];
 
+        // Fail fast if the database is unreachable so the page still renders.
+        try {
+            \Illuminate\Support\Facades\DB::connection()->getPdo();
+        } catch (\Throwable $exception) {
+            $results[] = [
+                'check' => 'Database Connection',
+                'status' => 'critical',
+                'message' => 'Database connection failed: '.$exception->getMessage(),
+            ];
+
+            return $results;
+        }
+
         // Check for snapshots
         $snapshotCount = \Illuminate\Support\Facades\DB::table('starter_panel_snapshots')->count();
         $results[] = [
