@@ -47,6 +47,9 @@ class Doctor
             'message' => $filamentInstalled ? 'Filament v5 is present.' : 'Filament v5 is MISSING.',
         ];
 
+        // User Model Check
+        $results = array_merge($results, $this->checkUserModelSetup());
+
         // Tenancy Check
         if (config('filament-starter.tenancy.enabled')) {
             $tenantModel = config('filament-starter.tenancy.tenant_model');
@@ -88,6 +91,89 @@ class Doctor
         }
 
         return $results;
+    }
+
+    /**
+     * Check for required user model interfaces, traits, and methods.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    protected function checkUserModelSetup(): array
+    {
+        $userModel = config('auth.providers.users.model');
+
+        if (! $userModel || ! class_exists($userModel)) {
+            return [[
+                'check' => 'User Model',
+                'status' => 'critical',
+                'message' => 'User model is not configured or could not be found.',
+            ]];
+        }
+
+        $missingInterfaces = [];
+        $requiredInterfaces = [
+            \Filament\Models\Contracts\FilamentUser::class,
+            \Filament\Models\Contracts\HasAvatar::class,
+        ];
+
+        foreach ($requiredInterfaces as $interface) {
+            if (! is_subclass_of($userModel, $interface)) {
+                $missingInterfaces[] = $interface;
+            }
+        }
+
+        $traits = class_uses_recursive($userModel) ?: [];
+        $requiredTraits = [
+            \Rappasoft\LaravelAuthenticationLog\Traits\AuthenticationLoggable::class,
+            \EdrisaTuray\FilamentUtilities\Concerns\CanAccessPanel::class,
+            \Laravel\Sanctum\HasApiTokens::class,
+            \Spatie\Permission\Traits\HasRoles::class,
+            \Archilex\AdvancedTables\Concerns\HasViews::class,
+            \Spatie\Activitylog\Traits\LogsActivity::class,
+            \Illuminate\Notifications\Notifiable::class,
+            \Jeffgreco13\FilamentBreezy\Traits\TwoFactorAuthenticatable::class,
+        ];
+
+        $missingTraits = array_values(array_diff($requiredTraits, $traits));
+
+        $requiredMethods = [
+            'getActivitylogOptions',
+            'getFilamentAvatarUrl',
+            'canAccessPanel',
+        ];
+
+        $missingMethods = array_values(array_filter(
+            $requiredMethods,
+            fn (string $method) => ! method_exists($userModel, $method)
+        ));
+
+        if ($missingInterfaces || $missingTraits || $missingMethods) {
+            $details = [];
+
+            if ($missingInterfaces) {
+                $details[] = 'Missing interfaces: '.implode(', ', $missingInterfaces);
+            }
+
+            if ($missingTraits) {
+                $details[] = 'Missing traits: '.implode(', ', $missingTraits);
+            }
+
+            if ($missingMethods) {
+                $details[] = 'Missing methods: '.implode(', ', $missingMethods);
+            }
+
+            return [[
+                'check' => 'User Model Setup',
+                'status' => 'critical',
+                'message' => implode(' | ', $details),
+            ]];
+        }
+
+        return [[
+            'check' => 'User Model Setup',
+            'status' => 'ok',
+            'message' => 'User model meets Filament Starter requirements.',
+        ]];
     }
 
     /**

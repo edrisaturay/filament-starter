@@ -46,7 +46,7 @@ Add the path repository and require the package:
 In your `AdminPanelProvider.php`, remove all managed plugins and add:
 ```php
 ->plugins([
-    \EdrisaTuray\FilamentStarter\Filament\StarterPlugin::make(),
+    \EdrisaTuray\FilamentStarter\Filament\FilamentStarterPlugin::make(),
 ])
 ```
 

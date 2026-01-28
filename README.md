@@ -127,22 +127,78 @@ The package behavior can be customized via `config/filament-starter.php`. Key se
 
 ## Usage in Panels
 
-To use the starter kit in any panel, simply register the `StarterPlugin`:
+To use the starter kit in any panel, register the plugin and include the persistent middleware:
 
 ```php
-use EdrisaTuray\FilamentStarter\Filament\StarterPlugin;
+use EdrisaTuray\FilamentStarter\Filament\FilamentStarterPlugin;
 
 public function panel(Panel $panel): Panel
 {
     return $panel
         // ...
+        ->middleware([
+            'starter.developer-gate',
+        ], isPersistent: true)
         ->plugins([
-            StarterPlugin::make(),
+            FilamentStarterPlugin::make(),
         ]);
 }
 ```
 
 This will automatically register the Platform Manager resources (for authorized users) and resolve all enabled plugins for that panel.
+
+## User Model Setup
+
+Ensure your `User` model implements the required interfaces, traits, and methods. You can add them individually, or use the provided trait:
+
+```php
+use EdrisaTuray\FilamentStarter\Concerns\HasStarterUserFeatures;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Models\Contracts\HasAvatar;
+
+class User extends Authenticatable implements FilamentUser, HasAvatar
+{
+    use HasStarterUserFeatures;
+
+    /** @use HasFactory<\Database\Factories\UserFactory> */
+    use HasFactory;
+}
+```
+
+If you prefer to add them manually, include the following:
+
+Traits:
+
+```php
+use AuthenticationLoggable;
+use CanAccessPanel;
+use HasApiTokens;
+use HasRoles;
+use HasViews;
+use LogsActivity;
+use Notifiable;
+use TwoFactorAuthenticatable;
+```
+
+Methods:
+
+```php
+public function getActivitylogOptions(): LogOptions
+{
+    return LogOptions::defaults()
+        ->logAll();
+}
+
+public function getFilamentAvatarUrl(): ?string
+{
+    return $this->avatar_url ? Storage::url($this->avatar_url) : null;
+}
+
+public function canAccessPanel(Panel $panel): bool
+{
+    return true;
+}
+```
 
 ## License
 
