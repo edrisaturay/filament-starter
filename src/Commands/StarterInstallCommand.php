@@ -166,11 +166,12 @@ class StarterInstallCommand extends Command
         }
 
         $this->info("Publishing config for {$definition['label']}...");
+        $tag = $this->configPublishTags()[$definition['package']] ?? 'config';
         $class = $definition['class'] ?? null;
         if ($class) {
             $this->call('vendor:publish', [
                 '--provider' => $class,
-                '--tag' => 'config',
+                '--tag' => $tag,
             ]);
         }
     }
@@ -382,6 +383,10 @@ class StarterInstallCommand extends Command
         $this->newLine();
         $this->info('--- Filament Shield Setup ---');
         $this->call('shield:setup');
+
+        if ($this->confirm('Create a Shield super admin role now?', true)) {
+            $this->call('shield:super_admin');
+        }
     }
 
     /**
@@ -553,6 +558,16 @@ class StarterInstallCommand extends Command
                 'provider' => \Promethys\Revive\ReviveServiceProvider::class,
                 'migration_glob' => '*_create_recycle_bin_items_table.php',
             ],
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    protected function configPublishTags(): array
+    {
+        return [
+            'tomatophp/filament-users' => 'filament-users-config',
         ];
     }
 
