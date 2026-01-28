@@ -10,7 +10,6 @@ use Asmit\ResizedColumn\ResizedColumnPlugin;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use CharrafiMed\GlobalSearchModal\GlobalSearchModalPlugin;
 use Croustibat\FilamentJobsMonitor\FilamentJobsMonitorPlugin;
-use EdrisaTuray\FilamentAiChatAgent\AiChatAgentPlugin;
 use EdrisaTuray\FilamentApiDocsBuilder\FilamentApiDocsBuilderPlugin;
 use Filament\Panel;
 use Guava\FilamentKnowledgeBase\Plugins\KnowledgeBaseCompanionPlugin;
@@ -331,16 +330,6 @@ class PluginRegistry
                 'default_options' => [],
                 'class' => \Cocosmos\FilamentQuickAddSelect\FilamentQuickAddServiceProvider::class,
                 'package' => 'cocosmos/filament-quick-add-select',
-            ],
-            'filament-ai-chat-agent' => [
-                'label' => 'AI Chat Agent',
-                'installer' => fn (Panel $panel, array $options) => $panel->plugin(AiChatAgentPlugin::make()),
-                'default_enabled' => false,
-                'dangerous_to_disable' => false,
-                'requires_migrations' => false,
-                'default_options' => [],
-                'class' => AiChatAgentPlugin::class,
-                'package' => 'edrisaturay/filament-ai-chat-agent',
             ],
             'filament-api-docs-builder' => [
                 'label' => 'API Docs Builder',
