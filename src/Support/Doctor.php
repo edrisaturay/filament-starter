@@ -39,6 +39,9 @@ class Doctor
         // Check for Knowledge Base setup
         $results = array_merge($results, $this->checkKnowledgeBaseSetup());
 
+        // Check panel themes
+        $results = array_merge($results, $this->checkPanelThemes());
+
         // Check for Filament v5
         $filamentInstalled = class_exists(\Filament\Panel::class);
         $results[] = [
@@ -440,6 +443,96 @@ class Doctor
             'status' => 'ok',
             'message' => 'Spatie Health migrations are installed.',
         ]];
+    }
+
+    /**
+     * Check that each managed panel has a theme file, Vite input, and panel registration.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    protected function checkPanelThemes(): array
+    {
+        $results = [];
+        $panels = $this->getPanelsForThemeCheck();
+        $viteConfigPath = base_path('vite.config.js');
+        $viteConfig = file_exists($viteConfigPath) ? file_get_contents($viteConfigPath) : '';
+
+        foreach ($panels as $panelId) {
+            $relativePath = "resources/css/filament/{$panelId}/theme.css";
+            $themePath = resource_path("css/filament/{$panelId}/theme.css");
+            $providerPath = $this->getPanelProviderPath($panelId);
+
+            if (! file_exists($themePath)) {
+                $results[] = [
+                    'check' => "Panel Theme ({$panelId})",
+                    'status' => 'critical',
+                    'message' => "Theme file '{$relativePath}' is missing. Run 'php artisan make:filament-theme {$panelId}' and add it to Vite inputs.",
+                ];
+
+                continue;
+            }
+
+            if (! str_contains($viteConfig, $relativePath)) {
+                $results[] = [
+                    'check' => "Panel Theme ({$panelId})",
+                    'status' => 'critical',
+                    'message' => "Vite input is missing '{$relativePath}'. Add it to the 'input' array in vite.config.js.",
+                ];
+
+                continue;
+            }
+
+            if ($providerPath && file_exists($providerPath) && ! $this->providerHasViteTheme($providerPath, $relativePath)) {
+                $results[] = [
+                    'check' => "Panel Theme ({$panelId})",
+                    'status' => 'critical',
+                    'message' => "Panel provider is missing ->viteTheme('{$relativePath}'). Add it to the {$panelId} panel provider.",
+                ];
+
+                continue;
+            }
+
+            $results[] = [
+                'check' => "Panel Theme ({$panelId})",
+                'status' => 'ok',
+                'message' => "Theme registered for panel '{$panelId}'.",
+            ];
+        }
+
+        return $results;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    protected function getPanelsForThemeCheck(): array
+    {
+        $panels = array_unique(array_merge(
+            $this->getPanelIds(),
+            config('filament-starter.managed_panels', []),
+            ['knowledge-base']
+        ));
+
+        return array_values(array_filter($panels));
+    }
+
+    protected function getPanelProviderPath(string $panelId): ?string
+    {
+        $map = [
+            'admin' => app_path('Providers/Filament/AdminPanelProvider.php'),
+            'staff' => app_path('Providers/Filament/StaffPanelProvider.php'),
+            'knowledge-base' => app_path('Providers/Filament/KnowledgeBasePanelProvider.php'),
+        ];
+
+        return $map[$panelId] ?? null;
+    }
+
+    protected function providerHasViteTheme(string $providerPath, string $relativePath): bool
+    {
+        $content = file_get_contents($providerPath);
+
+        return str_contains($content, "->viteTheme('{$relativePath}')")
+            || str_contains($content, "->viteTheme(\"{$relativePath}\")");
     }
 
     /**
