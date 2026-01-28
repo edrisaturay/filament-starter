@@ -43,6 +43,7 @@
         "cocosmos/filament-quick-add-select": "^1.0",
         "edrisaturay/filament-ai-chat-agent": "*",
         "edrisaturay/filament-api-docs-builder": "*",
+        "edrisaturay/filament-utilities": "^1.0",
         "edrisaturay/filament-natural-language-filter": "*",
         "tomatophp/filament-users": "^5.0",
         "bezhansalleh/filament-panel-switch": "^2.1"
