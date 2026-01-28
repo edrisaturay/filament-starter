@@ -109,8 +109,8 @@ class StarterInstallCommand extends Command
             ->mapWithKeys(fn ($definition, $key) => [$key => $definition['label']])
             ->toArray();
 
-        // 1. Publish Configs
-        $this->publishPluginConfigs($plugins, $pluginOptions);
+        // 1. Publish configs and migrations
+        $this->publishPluginAssets($plugins, $pluginOptions);
 
         // 2. Enable/Disable per Panel
         $this->activatePluginsPerPanel($plugins, $pluginOptions);
@@ -122,13 +122,13 @@ class StarterInstallCommand extends Command
     /**
      * Ask which plugin configs to publish.
      */
-    protected function publishPluginConfigs(array $plugins, array $options): void
+    protected function publishPluginAssets(array $plugins, array $options): void
     {
         if ($this->option('publish-all')) {
             $toPublish = array_keys($plugins);
         } else {
             $toPublish = $this->multiSelect(
-                'Which plugin config files should be published?',
+                'Which plugins should have configs/migrations published?',
                 array_merge(['none' => 'none', 'all' => 'all'], $options),
                 ['none']
             );
@@ -148,20 +148,60 @@ class StarterInstallCommand extends Command
                 continue;
             }
 
-            $package = $definition['package'] ?? null;
-            if ($package) {
-                $this->info("Publishing config for {$definition['label']}...");
-                // In a real scenario, we'd need the actual provider or tag.
-                // We'll attempt a generic publish by provider if available in registry
-                $class = $definition['class'] ?? null;
-                if ($class) {
-                    $this->call('vendor:publish', [
-                        '--provider' => $class,
-                        '--tag' => 'config',
-                    ]);
-                }
-            }
+            $this->publishPluginConfig($definition);
+            $this->publishPluginMigrations($key);
         }
+    }
+
+    /**
+     * Publish plugin config if possible.
+     *
+     * @param  array<string, mixed>  $definition
+     */
+    protected function publishPluginConfig(array $definition): void
+    {
+        $package = $definition['package'] ?? null;
+        if (! $package) {
+            return;
+        }
+
+        $this->info("Publishing config for {$definition['label']}...");
+        $class = $definition['class'] ?? null;
+        if ($class) {
+            $this->call('vendor:publish', [
+                '--provider' => $class,
+                '--tag' => 'config',
+            ]);
+        }
+    }
+
+    /**
+     * Publish plugin migrations if missing.
+     */
+    protected function publishPluginMigrations(string $key): void
+    {
+        $publishers = $this->pluginMigrationPublishers();
+        $publisher = $publishers[$key] ?? null;
+
+        if (! $publisher) {
+            return;
+        }
+
+        if ($this->hasTableForMigration($publisher['table'])) {
+            return;
+        }
+
+        if ($this->hasMigrationPublished($publisher['migration_glob'])) {
+            return;
+        }
+
+        $this->info("Publishing {$publisher['label']} migrations...");
+        $arguments = ['--tag' => $publisher['tag']];
+        if (! empty($publisher['provider'])) {
+            $arguments['--provider'] = $publisher['provider'];
+        }
+
+        $this->call('vendor:publish', $arguments);
     }
 
     /**
@@ -442,6 +482,71 @@ class StarterInstallCommand extends Command
                 'migration_glob' => '*_create_filament-jobs-monitor_table.php',
             ],
             [
+                'label' => 'Promethys Revive',
+                'table' => 'recycle_bin_items',
+                'tag' => 'revive-migrations',
+                'provider' => \Promethys\Revive\ReviveServiceProvider::class,
+                'migration_glob' => '*_create_recycle_bin_items_table.php',
+            ],
+        ];
+    }
+
+    /**
+     * @return array<string, array<string, string>>
+     */
+    protected function pluginMigrationPublishers(): array
+    {
+        return [
+            'filament-activity-log' => [
+                'label' => 'Spatie Activitylog',
+                'table' => config('activitylog.table_name', 'activity_log'),
+                'tag' => 'activitylog-migrations',
+                'provider' => \Spatie\Activitylog\ActivitylogServiceProvider::class,
+                'migration_glob' => '*_create_activity_log_table.php',
+            ],
+            'filament-authentication-log' => [
+                'label' => 'Authentication Log',
+                'table' => config('authentication-log.table_name', 'authentication_log'),
+                'tag' => 'authentication-log-migrations',
+                'provider' => \Rappasoft\LaravelAuthenticationLog\LaravelAuthenticationLogServiceProvider::class,
+                'migration_glob' => '*_create_authentication_log_table.php',
+            ],
+            'filament-breezy' => [
+                'label' => 'Filament Breezy',
+                'table' => 'breezy_sessions',
+                'tag' => 'filament-breezy-migrations',
+                'provider' => \Jeffgreco13\FilamentBreezy\FilamentBreezyServiceProvider::class,
+                'migration_glob' => '*_create_breezy_sessions_table.php',
+            ],
+            'filament-email' => [
+                'label' => 'Filament Email',
+                'table' => 'filament_email_log',
+                'tag' => 'filament-email-migrations',
+                'provider' => \RickDBCN\FilamentEmail\FilamentEmailServiceProvider::class,
+                'migration_glob' => '*_create_filament_email_table.php',
+            ],
+            'filter-sets' => [
+                'label' => 'Advanced Tables (Filter Sets)',
+                'table' => 'filament_filter_sets',
+                'tag' => 'advanced-tables-migrations',
+                'provider' => \Archilex\AdvancedTables\AdvancedTablesServiceProvider::class,
+                'migration_glob' => '*_create_filament_filter_sets_table.php',
+            ],
+            'filament-health' => [
+                'label' => 'Spatie Health',
+                'table' => 'health_check_result_history_items',
+                'tag' => 'laravel-health-migrations',
+                'provider' => \Spatie\Health\HealthServiceProvider::class,
+                'migration_glob' => '*_create_health_tables.php',
+            ],
+            'filament-jobs-monitor' => [
+                'label' => 'Filament Jobs Monitor',
+                'table' => 'queue_monitors',
+                'tag' => 'filament-jobs-monitor-migrations',
+                'provider' => \Croustibat\FilamentJobsMonitor\FilamentJobsMonitorServiceProvider::class,
+                'migration_glob' => '*_create_filament-jobs-monitor_table.php',
+            ],
+            'filament-revive' => [
                 'label' => 'Promethys Revive',
                 'table' => 'recycle_bin_items',
                 'tag' => 'revive-migrations',
