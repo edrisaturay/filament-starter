@@ -159,6 +159,16 @@ class Doctor
             fn (string $method) => ! method_exists($userModel, $method)
         ));
 
+        if (
+            in_array(\Filament\Models\Contracts\HasAvatar::class, $missingInterfaces, true)
+            && ! in_array('getFilamentAvatarUrl', $missingMethods, true)
+        ) {
+            $missingInterfaces = array_values(array_filter(
+                $missingInterfaces,
+                fn (string $interface) => $interface !== \Filament\Models\Contracts\HasAvatar::class
+            ));
+        }
+
         if ($missingInterfaces || $missingTraits || $missingMethods) {
             $details = [];
 

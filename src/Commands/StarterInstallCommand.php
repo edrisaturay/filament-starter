@@ -261,7 +261,7 @@ class StarterInstallCommand extends Command
         $kbPluginKey = 'filament-knowledge-base';
         $kbCompanionKey = 'filament-knowledge-base-companion';
         $kbPanelId = 'knowledge-base';
-        $panels = \EdrisaTuray\FilamentStarter\Models\PanelSnapshot::pluck('panel_id')->toArray();
+        $panels = $this->getPanelIds();
 
         // 1. Check for dedicated KB panel
         if (! in_array($kbPanelId, $panels)) {
@@ -509,7 +509,7 @@ class StarterInstallCommand extends Command
         $this->line("- 'plugins.backgrounds.my_images_directory' => '{$directory}'");
 
         // 3. Ask which panels should have it enabled
-        $panels = \EdrisaTuray\FilamentStarter\Models\PanelSnapshot::pluck('panel_id')->toArray();
+        $panels = $this->getPanelIds();
         $enabledPanels = $this->choice(
             'In which panels should Filament Backgrounds be ENABLED?',
             array_merge(['none', 'all'], $panels),
@@ -540,7 +540,7 @@ class StarterInstallCommand extends Command
         $this->info('--- Promethys Revive (Recycle Bin) Setup ---');
 
         if ($this->option('no-interaction')) {
-            $this->call('revive:install', ['--no-interaction' => true]);
+            $this->publishReviveMigrationsIfNeeded();
 
             return;
         }
@@ -549,8 +549,12 @@ class StarterInstallCommand extends Command
             return;
         }
 
-        // 1. Run the plugin's install command
-        $this->call('revive:install');
+        // 1. Publish required migrations when missing
+        $this->publishReviveMigrationsIfNeeded();
+
+        if (! $this->hasRecycleBinItemsTable() && $this->confirm('Would you like to run the migrations now?', true)) {
+            $this->call('migrate', ['--force' => true]);
+        }
 
         // 2. Ask for global config options
         $this->info('Configuring global Revive settings...');
@@ -558,7 +562,7 @@ class StarterInstallCommand extends Command
         $userScoping = $this->confirm('Enable User Scoping by default? (Users see only their own deletions)', true);
         $tenantScoping = $this->confirm('Enable Tenant Scoping by default? (Users see deletions within their tenant)', true);
 
-        $panels = \EdrisaTuray\FilamentStarter\Models\PanelSnapshot::pluck('panel_id')->toArray();
+        $panels = $this->getPanelIds();
         $adminPanels = $this->choice(
             'Which panels should be "Global Admin Panels"? (See all records regardless of user/tenant)',
             array_merge(['none'], $panels),
@@ -623,5 +627,35 @@ class StarterInstallCommand extends Command
         // Ideally we use a package like 'october/rain' or similar for config writing
         // For now, we will just output what should be changed or assume it's handled via env/overrides
         $this->info('Locked invariants: Tenancy='.($tenancy ? 'Yes' : 'No').', Multilanguage='.($multilanguage ? 'Yes' : 'No'));
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    protected function getPanelIds(): array
+    {
+        return \EdrisaTuray\FilamentStarter\Models\PanelSnapshot::pluck('panel_id')->toArray();
+    }
+
+    protected function publishReviveMigrationsIfNeeded(): void
+    {
+        if ($this->hasRecycleBinItemsTable()) {
+            return;
+        }
+
+        if ($this->hasMigrationPublished('*_create_recycle_bin_items_table.php')) {
+            return;
+        }
+
+        $this->info('Publishing Promethys Revive migrations...');
+        $this->call('vendor:publish', [
+            '--tag' => 'revive-migrations',
+            '--provider' => \Promethys\Revive\ReviveServiceProvider::class,
+        ]);
+    }
+
+    protected function hasRecycleBinItemsTable(): bool
+    {
+        return \Illuminate\Support\Facades\Schema::hasTable('recycle_bin_items');
     }
 }
