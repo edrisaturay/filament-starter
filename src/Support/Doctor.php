@@ -431,7 +431,7 @@ class Doctor
             return [[
                 'check' => 'Health Migration',
                 'status' => 'critical',
-                'message' => "Spatie Health tables are missing. Run 'php artisan vendor:publish --provider=\"Spatie\\Health\\HealthServiceProvider\" --tag=\"laravel-health-migrations\"' then 'php artisan migrate'.",
+                'message' => "Spatie Health tables are missing. Run 'php artisan vendor:publish --provider=\"Spatie\\Health\\HealthServiceProvider\" --tag=\"health-migrations\"' then 'php artisan migrate'.",
             ]];
         }
 

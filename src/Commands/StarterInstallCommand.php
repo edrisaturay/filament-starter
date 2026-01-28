@@ -470,7 +470,7 @@ class StarterInstallCommand extends Command
             [
                 'label' => 'Spatie Health',
                 'table' => 'health_check_result_history_items',
-                'tag' => 'laravel-health-migrations',
+                'tag' => 'health-migrations',
                 'provider' => \Spatie\Health\HealthServiceProvider::class,
                 'migration_glob' => '*_create_health_tables.php',
             ],
@@ -535,7 +535,7 @@ class StarterInstallCommand extends Command
             'filament-health' => [
                 'label' => 'Spatie Health',
                 'table' => 'health_check_result_history_items',
-                'tag' => 'laravel-health-migrations',
+                'tag' => 'health-migrations',
                 'provider' => \Spatie\Health\HealthServiceProvider::class,
                 'migration_glob' => '*_create_health_tables.php',
             ],
