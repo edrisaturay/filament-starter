@@ -50,6 +50,12 @@ class Doctor
         // Check for Breezy setup
         $results = array_merge($results, $this->checkBreezySetup());
 
+        // Check Activity Log setup
+        $results = array_merge($results, $this->checkActivityLogSetup());
+
+        // Check Authentication Log setup
+        $results = array_merge($results, $this->checkAuthenticationLogSetup());
+
         // Check for Sanctum
         $results = array_merge($results, $this->checkSanctumSetup());
 
@@ -257,6 +263,68 @@ class Doctor
     protected function hasBreezySessionsTable(): bool
     {
         return \Illuminate\Support\Facades\Schema::hasTable('breezy_sessions');
+    }
+
+    protected function hasActivityLogTable(): bool
+    {
+        $table = config('activitylog.table_name', 'activity_log');
+
+        return \Illuminate\Support\Facades\Schema::hasTable($table);
+    }
+
+    protected function hasAuthenticationLogTable(): bool
+    {
+        $table = config('authentication-log.table_name', 'authentication_log');
+
+        return \Illuminate\Support\Facades\Schema::hasTable($table);
+    }
+
+    /**
+     * Check that Spatie Activitylog table exists when LogsActivity is used.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    protected function checkActivityLogSetup(): array
+    {
+        $table = config('activitylog.table_name', 'activity_log');
+
+        if (! $this->hasActivityLogTable()) {
+            return [[
+                'check' => 'Activity Log Migration',
+                'status' => 'critical',
+                'message' => "Activity log table '{$table}' is missing. Run 'php artisan vendor:publish --provider=\"Spatie\\Activitylog\\ActivitylogServiceProvider\" --tag=\"activitylog-migrations\"' then 'php artisan migrate'.",
+            ]];
+        }
+
+        return [[
+            'check' => 'Activity Log Migration',
+            'status' => 'ok',
+            'message' => 'Activity log migrations are installed.',
+        ]];
+    }
+
+    /**
+     * Check that Authentication Log table exists when AuthenticationLoggable is used.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    protected function checkAuthenticationLogSetup(): array
+    {
+        $table = config('authentication-log.table_name', 'authentication_log');
+
+        if (! $this->hasAuthenticationLogTable()) {
+            return [[
+                'check' => 'Authentication Log Migration',
+                'status' => 'critical',
+                'message' => "Authentication log table '{$table}' is missing. Run 'php artisan vendor:publish --provider=\"Rappasoft\\LaravelAuthenticationLog\\LaravelAuthenticationLogServiceProvider\" --tag=\"authentication-log-migrations\"' then 'php artisan migrate'.",
+            ]];
+        }
+
+        return [[
+            'check' => 'Authentication Log Migration',
+            'status' => 'ok',
+            'message' => 'Authentication log migrations are installed.',
+        ]];
     }
 
     /**
