@@ -385,7 +385,7 @@ class StarterInstallCommand extends Command
         $this->call('shield:setup');
 
         if ($this->confirm('Create a Shield super admin role now?', true)) {
-            $this->call('shield:super_admin');
+            $this->call('shield:super-admin');
         }
     }
 
