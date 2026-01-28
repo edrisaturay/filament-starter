@@ -46,6 +46,9 @@ class StarterInstallCommand extends Command
         // 1. Run migrations
         $this->call('migrate', ['--force' => true]);
 
+        // 1.1 Ensure Sanctum is installed
+        $this->ensureSanctumInstalled();
+
         // 2. Snapshot panels and sync plugins
         $this->info('Snapshotting panels and syncing plugins...');
         PanelSnapshotManager::snapshot();
@@ -336,6 +339,24 @@ class StarterInstallCommand extends Command
         $this->newLine();
         $this->info('--- Filament Shield Setup ---');
         $this->call('shield:setup');
+    }
+
+    /**
+     * Ensure Laravel Sanctum is installed for API tokens.
+     */
+    protected function ensureSanctumInstalled(): void
+    {
+        if ($this->hasSanctumConfig()) {
+            return;
+        }
+
+        $this->info('Installing Laravel Sanctum (install:api)...');
+        $this->call('install:api', ['--no-interaction' => true]);
+    }
+
+    protected function hasSanctumConfig(): bool
+    {
+        return file_exists(config_path('sanctum.php'));
     }
 
     /**

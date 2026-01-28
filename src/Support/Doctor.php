@@ -47,6 +47,9 @@ class Doctor
             'message' => $filamentInstalled ? 'Filament v5 is present.' : 'Filament v5 is MISSING.',
         ];
 
+        // Check for Sanctum
+        $results = array_merge($results, $this->checkSanctumSetup());
+
         // User Model Check
         $results = array_merge($results, $this->checkUserModelSetup());
 
@@ -174,6 +177,46 @@ class Doctor
             'status' => 'ok',
             'message' => 'User model meets Filament Starter requirements.',
         ]];
+    }
+
+    /**
+     * Check that Sanctum is installed for API tokens.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    protected function checkSanctumSetup(): array
+    {
+        if (! $this->hasSanctumConfig()) {
+            return [[
+                'check' => 'Sanctum Install',
+                'status' => 'critical',
+                'message' => "Laravel Sanctum is missing. Run 'php artisan install:api'.",
+            ]];
+        }
+
+        if (! $this->hasSanctumTable()) {
+            return [[
+                'check' => 'Sanctum Migration',
+                'status' => 'warning',
+                'message' => "Sanctum tables are missing. Run 'php artisan migrate'.",
+            ]];
+        }
+
+        return [[
+            'check' => 'Sanctum Install',
+            'status' => 'ok',
+            'message' => 'Laravel Sanctum is installed.',
+        ]];
+    }
+
+    protected function hasSanctumConfig(): bool
+    {
+        return file_exists(config_path('sanctum.php'));
+    }
+
+    protected function hasSanctumTable(): bool
+    {
+        return \Illuminate\Support\Facades\Schema::hasTable('personal_access_tokens');
     }
 
     /**
