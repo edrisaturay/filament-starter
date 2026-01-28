@@ -23,6 +23,7 @@ class StarterServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->registerPanelSwitcher();
+        $this->registerReviveLivewireComponents();
 
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'filament-starter');
@@ -41,6 +42,23 @@ class StarterServiceProvider extends ServiceProvider
                 StarterSafeModeCommand::class,
             ]);
         }
+    }
+
+    protected function registerReviveLivewireComponents(): void
+    {
+        if (! class_exists(\Livewire\Livewire::class)) {
+            return;
+        }
+
+        if (
+            ! class_exists(\Promethys\Revive\Pages\RecycleBin::class)
+            || ! class_exists(\Promethys\Revive\Tables\RecycleBin::class)
+        ) {
+            return;
+        }
+
+        \Livewire\Livewire::component('revive::pages.recycle-bin', \Promethys\Revive\Pages\RecycleBin::class);
+        \Livewire\Livewire::component('revive::tables.recycle-bin', \Promethys\Revive\Tables\RecycleBin::class);
     }
 
     /**
