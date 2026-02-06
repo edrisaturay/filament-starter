@@ -171,8 +171,6 @@ return array(
     'BezhanSalleh\\FilamentShield\\' => array($vendorDir . '/bezhansalleh/filament-shield/src'),
     'BaconQrCode\\' => array($vendorDir . '/bacon/bacon-qr-code/src'),
     'Asmit\\ResizedColumn\\' => array($vendorDir . '/asmit/resized-column/src'),
-    'Archilex\\AdvancedTables\\Database\\Factories\\' => array($vendorDir . '/archilex/filament-filter-sets/database/factories'),
-    'Archilex\\AdvancedTables\\' => array($vendorDir . '/archilex/filament-filter-sets/src'),
     'AnourValar\\EloquentSerialize\\' => array($vendorDir . '/anourvalar/eloquent-serialize/src'),
     'Alizharb\\FilamentModuleManager\\' => array($vendorDir . '/alizharb/filament-module-manager/src'),
     'AlizHarb\\ActivityLog\\' => array($vendorDir . '/alizharb/filament-activity-log/src'),

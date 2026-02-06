@@ -290,8 +290,6 @@ class ComposerStaticInit56409a31d4c6776cd0aef00ffc53722f
         'A' => 
         array (
             'Asmit\\ResizedColumn\\' => 20,
-            'Archilex\\AdvancedTables\\Database\\Factories\\' => 43,
-            'Archilex\\AdvancedTables\\' => 24,
             'AnourValar\\EloquentSerialize\\' => 29,
             'Alizharb\\FilamentModuleManager\\' => 31,
             'AlizHarb\\ActivityLog\\' => 21,
@@ -971,14 +969,6 @@ class ComposerStaticInit56409a31d4c6776cd0aef00ffc53722f
         'Asmit\\ResizedColumn\\' => 
         array (
             0 => __DIR__ . '/..' . '/asmit/resized-column/src',
-        ),
-        'Archilex\\AdvancedTables\\Database\\Factories\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/archilex/filament-filter-sets/database/factories',
-        ),
-        'Archilex\\AdvancedTables\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/archilex/filament-filter-sets/src',
         ),
         'AnourValar\\EloquentSerialize\\' => 
         array (

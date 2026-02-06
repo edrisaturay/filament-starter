@@ -466,13 +466,6 @@ class StarterInstallCommand extends Command
                 'migration_glob' => '*_create_filament_email_table.php',
             ],
             [
-                'label' => 'Advanced Tables (Filter Sets)',
-                'table' => 'filament_filter_sets',
-                'tag' => 'advanced-tables-migrations',
-                'provider' => \Archilex\AdvancedTables\AdvancedTablesServiceProvider::class,
-                'migration_glob' => '*_create_filament_filter_sets_table.php',
-            ],
-            [
                 'label' => 'Spatie Health',
                 'table' => 'health_check_result_history_items',
                 'tag' => 'health-migrations',
@@ -529,13 +522,6 @@ class StarterInstallCommand extends Command
                 'tag' => 'filament-email-migrations',
                 'provider' => \RickDBCN\FilamentEmail\FilamentEmailServiceProvider::class,
                 'migration_glob' => '*_create_filament_email_table.php',
-            ],
-            'filter-sets' => [
-                'label' => 'Advanced Tables (Filter Sets)',
-                'table' => 'filament_filter_sets',
-                'tag' => 'advanced-tables-migrations',
-                'provider' => \Archilex\AdvancedTables\AdvancedTablesServiceProvider::class,
-                'migration_glob' => '*_create_filament_filter_sets_table.php',
             ],
             'filament-health' => [
                 'label' => 'Spatie Health',

@@ -2,7 +2,6 @@
 
 namespace EdrisaTuray\FilamentStarter\Concerns;
 
-use Archilex\AdvancedTables\Concerns\HasViews;
 use EdrisaTuray\FilamentUtilities\Concerns\CanAccessPanel;
 use Filament\Panel;
 use Filament\Facades\Filament;
@@ -21,7 +20,6 @@ trait HasStarterUserFeatures
     use CanAccessPanel;
     use HasApiTokens;
     use HasRoles;
-    use HasViews;
     use LogsActivity;
     use Notifiable;
     use TwoFactorAuthenticatable {

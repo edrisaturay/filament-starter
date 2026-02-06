@@ -9,18 +9,7 @@ The package now owns all managed plugin dependencies. You should remove the foll
 - `jeffgreco13/filament-breezy`
 - ... (and all other managed plugins)
 
-### 2. Archilex Filter Sets Repository
-If you use `filter-sets`, ensure the custom repository is still present in your root `composer.json`:
-```json
-"repositories": [
-    {
-        "type": "composer",
-        "url": "https://filament-filter-sets.composer.sh"
-    }
-]
-```
-
-### 3. Update Dependencies
+### 2. Update Dependencies
 ```bash
 composer update
 php artisan starter:update

@@ -76,8 +76,6 @@ class Doctor
         $results = array_merge($results, $this->checkFilamentEmailSetup());
 
         // Check Advanced Tables (Filter Sets) setup
-        $results = array_merge($results, $this->checkFilterSetsSetup());
-
         // Check Spatie Health setup
         $results = array_merge($results, $this->checkHealthSetup());
 
@@ -112,9 +110,6 @@ class Doctor
                     if (($states[$key]['enabled'] ?? false)) {
                         $status = 'critical';
                         $message = "Plugin {$key} is ENABLED but its package {$definition['package']} is MISSING.";
-                        if ($key === 'filter-sets') {
-                            $message .= " Ensure 'https://filament-filter-sets.composer.sh' repository is added to root composer.json.";
-                        }
                         break;
                     }
                 }
@@ -165,7 +160,6 @@ class Doctor
             \EdrisaTuray\FilamentUtilities\Concerns\CanAccessPanel::class,
             \Laravel\Sanctum\HasApiTokens::class,
             \Spatie\Permission\Traits\HasRoles::class,
-            \Archilex\AdvancedTables\Concerns\HasViews::class,
             \Spatie\Activitylog\Traits\LogsActivity::class,
             \Illuminate\Notifications\Notifiable::class,
             \Jeffgreco13\FilamentBreezy\Traits\TwoFactorAuthenticatable::class,
@@ -319,14 +313,6 @@ class Doctor
         return \Illuminate\Support\Facades\Schema::hasTable('filament_email_log');
     }
 
-    protected function hasFilterSetsTables(): bool
-    {
-        $schema = \Illuminate\Support\Facades\Schema::class;
-
-        return $schema::hasTable('filament_filter_sets')
-            && $schema::hasTable('filament_filter_set_user');
-    }
-
     protected function hasHealthTables(): bool
     {
         return \Illuminate\Support\Facades\Schema::hasTable('health_check_result_history_items');
@@ -403,32 +389,6 @@ class Doctor
             'check' => 'Filament Email Migration',
             'status' => 'ok',
             'message' => 'Filament Email migrations are installed.',
-        ]];
-    }
-
-    /**
-     * Check that Advanced Tables (Filter Sets) migrations are installed when enabled.
-     *
-     * @return array<int, array<string, mixed>>
-     */
-    protected function checkFilterSetsSetup(): array
-    {
-        if (! $this->isPluginEnabled('filter-sets')) {
-            return [];
-        }
-
-        if (! $this->hasFilterSetsTables()) {
-            return [[
-                'check' => 'Filter Sets Migration',
-                'status' => 'critical',
-                'message' => "Filter Sets tables are missing. Run 'php artisan vendor:publish --provider=\"Archilex\\AdvancedTables\\AdvancedTablesServiceProvider\" --tag=\"advanced-tables-migrations\"' then 'php artisan migrate'.",
-            ]];
-        }
-
-        return [[
-            'check' => 'Filter Sets Migration',
-            'status' => 'ok',
-            'message' => 'Filter Sets migrations are installed.',
         ]];
     }
 

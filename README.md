@@ -28,17 +28,6 @@ If that fails, you can manually set the version of `webmozart/assert` in your ro
 composer require webmozart/assert:1.12.1
 ```
 
-**Note:** Since this package depends on `archilex/filament-filter-sets`, you must add its custom repository to your root `composer.json` before installing:
-
-```json
-"repositories": [
-    {
-        "type": "composer",
-        "url": "https://filament-filter-sets.composer.sh"
-    }
-]
-```
-
 ## Key Components
 
 ### 1. Plugin Registry (`Support/PluginRegistry.php`)

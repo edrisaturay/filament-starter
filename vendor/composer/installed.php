@@ -55,15 +55,6 @@
             'aliases' => array(),
             'dev_requirement' => false,
         ),
-        'archilex/filament-filter-sets' => array(
-            'pretty_version' => '5.1.1',
-            'version' => '5.1.1.0',
-            'reference' => 'cd42f1f7ad1cd9719b0d67ec58e5abcfefab3251',
-            'type' => 'library',
-            'install_path' => __DIR__ . '/../archilex/filament-filter-sets',
-            'aliases' => array(),
-            'dev_requirement' => false,
-        ),
         'asmit/resized-column' => array(
             'pretty_version' => 'v2.1.0',
             'version' => '2.1.0.0',

@@ -4,8 +4,7 @@ namespace EdrisaTuray\FilamentStarter\Support;
 
 use AchyutN\FilamentLogViewer\FilamentLogViewer;
 use AlizHarb\ActivityLog\ActivityLogPlugin;
-use Alizharb\FilamentModuleManager\FilamentModuleManagerPlugin;
-use Archilex\AdvancedTables\Plugin\AdvancedTablesPlugin;
+use Coolsam\Modules\ModulesPlugin;
 use Asmit\ResizedColumn\ResizedColumnPlugin;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use CharrafiMed\GlobalSearchModal\GlobalSearchModalPlugin;
@@ -149,16 +148,6 @@ class PluginRegistry
                 'class' => GlobalSearchModalPlugin::class,
                 'package' => 'charrafimed/global-search-modal',
             ],
-            'filter-sets' => [
-                'label' => 'Advanced Tables (Filter Sets)',
-                'installer' => fn (Panel $panel, array $options) => $panel->plugin(AdvancedTablesPlugin::make()),
-                'default_enabled' => true,
-                'dangerous_to_disable' => false,
-                'requires_migrations' => true,
-                'default_options' => [],
-                'class' => AdvancedTablesPlugin::class,
-                'package' => 'archilex/filament-filter-sets',
-            ],
             'sticky-table-header' => [
                 'label' => 'Sticky Table Header',
                 'installer' => fn (Panel $panel, array $options) => $panel->plugin(StickyTableHeaderPlugin::make()),
@@ -209,15 +198,15 @@ class PluginRegistry
                 'class' => ActivityLogPlugin::class,
                 'package' => 'alizharb/filament-activity-log',
             ],
-            'filament-module-manager' => [
-                'label' => 'Module Manager',
-                'installer' => fn (Panel $panel, array $options) => $panel->plugin(FilamentModuleManagerPlugin::make()),
+            'filament-modules' => [
+                'label' => 'Modules',
+                'installer' => fn (Panel $panel, array $options) => $panel->plugin(ModulesPlugin::make()),
                 'default_enabled' => true,
                 'dangerous_to_disable' => false,
                 'requires_migrations' => false,
                 'default_options' => [],
-                'class' => FilamentModuleManagerPlugin::class,
-                'package' => 'alizharb/filament-module-manager',
+                'class' => ModulesPlugin::class,
+                'package' => 'coolsam/modules',
             ],
             'filament-impersonate' => [
                 'label' => 'Impersonate',
@@ -340,16 +329,6 @@ class PluginRegistry
                 'default_options' => [],
                 'class' => FilamentApiDocsBuilderPlugin::class,
                 'package' => 'edrisaturay/filament-api-docs-builder',
-            ],
-            'filament-natural-language-filter' => [
-                'label' => 'Natural Language Filter',
-                'installer' => fn (Panel $panel, array $options) => $panel, // Component enhancement
-                'default_enabled' => false,
-                'dangerous_to_disable' => false,
-                'requires_migrations' => false,
-                'default_options' => [],
-                'class' => 'EdrisaTuray\FilamentNaturalLanguageFilter\FilamentNaturalLanguageFilterServiceProvider',
-                'package' => 'edrisaturay/filament-natural-language-filter',
             ],
             'filament-users' => [
                 'label' => 'Filament Users',
