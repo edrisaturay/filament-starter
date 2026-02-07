@@ -421,15 +421,6 @@
             'aliases' => array(),
             'dev_requirement' => false,
         ),
-        'guava/filament-knowledge-base' => array(
-            'pretty_version' => '3.0.0',
-            'version' => '3.0.0.0',
-            'reference' => '1c4585d3e9f908d45d64900fa876b50449ea2499',
-            'type' => 'library',
-            'install_path' => __DIR__ . '/../guava/filament-knowledge-base',
-            'aliases' => array(),
-            'dev_requirement' => false,
-        ),
         'guzzlehttp/guzzle' => array(
             'pretty_version' => '7.10.0',
             'version' => '7.10.0.0',

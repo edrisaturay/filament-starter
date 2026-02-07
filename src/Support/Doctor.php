@@ -49,9 +49,6 @@ class Doctor
         // Check for NPM dependencies
         $results = array_merge($results, $this->checkNpmDependencies());
 
-        // Check for Knowledge Base setup
-        $results = array_merge($results, $this->checkKnowledgeBaseSetup());
-
         // Check panel themes
         $results = array_merge($results, $this->checkPanelThemes());
 
@@ -482,8 +479,7 @@ class Doctor
     {
         $panels = array_unique(array_merge(
             $this->getPanelIds(),
-            config('filament-starter.managed_panels', []),
-            ['knowledge-base']
+            config('filament-starter.managed_panels', [])
         ));
 
         return array_values(array_filter($panels));
@@ -494,7 +490,6 @@ class Doctor
         $map = [
             'admin' => app_path('Providers/Filament/AdminPanelProvider.php'),
             'staff' => app_path('Providers/Filament/StaffPanelProvider.php'),
-            'knowledge-base' => app_path('Providers/Filament/KnowledgeBasePanelProvider.php'),
         ];
 
         return $map[$panelId] ?? null;
@@ -544,89 +539,6 @@ class Doctor
     protected function hasSanctumTable(): bool
     {
         return \Illuminate\Support\Facades\Schema::hasTable('personal_access_tokens');
-    }
-
-    /**
-     * Check for Knowledge Base specific setup requirements.
-     *
-     * @return array<int, array<string, mixed>>
-     */
-    protected function checkKnowledgeBaseSetup(): array
-    {
-        $results = [];
-        $kbPluginKey = 'filament-knowledge-base';
-        $kbCompanionKey = 'filament-knowledge-base-companion';
-        $kbPanelId = 'knowledge-base';
-
-        // Check if either KB plugin is enabled in any panel
-        $isKbUsed = false;
-        $panels = \Illuminate\Support\Facades\DB::table('starter_panel_snapshots')->pluck('panel_id')->toArray();
-
-        foreach ($panels as $panelId) {
-            $states = PluginStateResolver::resolve($panelId);
-            if (($states[$kbPluginKey]['enabled'] ?? false) || ($states[$kbCompanionKey]['enabled'] ?? false)) {
-                $isKbUsed = true;
-                break;
-            }
-        }
-
-        if (! $isKbUsed) {
-            return $results;
-        }
-
-        // 1. Check for dedicated KB panel
-        $kbPanelExists = \Illuminate\Support\Facades\DB::table('starter_panel_snapshots')
-            ->where('panel_id', $kbPanelId)
-            ->exists();
-
-        if (! $kbPanelExists) {
-            $results[] = [
-                'check' => 'KB: Dedicated Panel',
-                'status' => 'critical',
-                'message' => "Dedicated panel '{$kbPanelId}' is MISSING. Run 'php artisan filament:panel {$kbPanelId}' to create it.",
-            ];
-        }
-
-        // 2. Check for theme directives in all panels
-        foreach ($panels as $panelId) {
-            $states = PluginStateResolver::resolve($panelId);
-            if (! ($states[$kbPluginKey]['enabled'] ?? false) && ! ($states[$kbCompanionKey]['enabled'] ?? false)) {
-                continue;
-            }
-
-            // Get panel snapshot for theme path if we had it, but snapshots only have meta.
-            // We'll try to find the theme file by convention or check common locations.
-            $themePath = resource_path("css/filament/{$panelId}/theme.css");
-
-            if (! file_exists($themePath)) {
-                $results[] = [
-                    'check' => "KB: Theme for {$panelId}",
-                    'status' => 'warning',
-                    'message' => "Custom theme for panel '{$panelId}' not found at 'resources/css/filament/{$panelId}/theme.css'. KB requires a custom theme.",
-                ];
-
-                continue;
-            }
-
-            $themeContent = file_get_contents($themePath);
-            $requiredDirectives = [
-                '@plugin "@tailwindcss/typography"',
-                'vendor/guava/filament-knowledge-base/src',
-                'vendor/guava/filament-knowledge-base/resources/views',
-            ];
-
-            foreach ($requiredDirectives as $directive) {
-                if (! str_contains($themeContent, $directive)) {
-                    $results[] = [
-                        'check' => "KB: Theme Directives ({$panelId})",
-                        'status' => 'critical',
-                        'message' => "Theme file for '{$panelId}' is missing KB directive: '{$directive}'.",
-                    ];
-                }
-            }
-        }
-
-        return $results;
     }
 
     /**

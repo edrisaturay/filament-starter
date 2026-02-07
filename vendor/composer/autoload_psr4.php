@@ -127,8 +127,6 @@ return array(
     'GuzzleHttp\\Psr7\\' => array($vendorDir . '/guzzlehttp/psr7/src'),
     'GuzzleHttp\\Promise\\' => array($vendorDir . '/guzzlehttp/promises/src'),
     'GuzzleHttp\\' => array($vendorDir . '/guzzlehttp/guzzle/src'),
-    'Guava\\FilamentKnowledgeBase\\Database\\Factories\\' => array($vendorDir . '/guava/filament-knowledge-base/database/factories'),
-    'Guava\\FilamentKnowledgeBase\\' => array($vendorDir . '/guava/filament-knowledge-base/src'),
     'GrahamCampbell\\ResultType\\' => array($vendorDir . '/graham-campbell/result-type/src'),
     'Giggsey\\Locale\\' => array($vendorDir . '/giggsey/locale/src'),
     'Fruitcake\\Cors\\' => array($vendorDir . '/fruitcake/php-cors/src'),

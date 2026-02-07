@@ -4,15 +4,12 @@ namespace EdrisaTuray\FilamentStarter\Support;
 
 use AchyutN\FilamentLogViewer\FilamentLogViewer;
 use AlizHarb\ActivityLog\ActivityLogPlugin;
-use Coolsam\Modules\ModulesPlugin;
 use Asmit\ResizedColumn\ResizedColumnPlugin;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use CharrafiMed\GlobalSearchModal\GlobalSearchModalPlugin;
 use Croustibat\FilamentJobsMonitor\FilamentJobsMonitorPlugin;
 use EdrisaTuray\FilamentApiDocsBuilder\FilamentApiDocsBuilderPlugin;
 use Filament\Panel;
-use Guava\FilamentKnowledgeBase\Plugins\KnowledgeBaseCompanionPlugin;
-use Guava\FilamentKnowledgeBase\Plugins\KnowledgeBasePlugin;
 use Jeffgreco13\FilamentBreezy\BreezyCore;
 use Promethys\Revive\RevivePlugin;
 use pxlrbt\FilamentEnvironmentIndicator\EnvironmentIndicatorPlugin;
@@ -198,16 +195,6 @@ class PluginRegistry
                 'class' => ActivityLogPlugin::class,
                 'package' => 'alizharb/filament-activity-log',
             ],
-            'filament-modules' => [
-                'label' => 'Modules',
-                'installer' => fn (Panel $panel, array $options) => $panel->plugin(ModulesPlugin::make()),
-                'default_enabled' => true,
-                'dangerous_to_disable' => false,
-                'requires_migrations' => false,
-                'default_options' => [],
-                'class' => ModulesPlugin::class,
-                'package' => 'coolsam/modules',
-            ],
             'filament-impersonate' => [
                 'label' => 'Impersonate',
                 'installer' => fn (Panel $panel, array $options) => $panel, // Often added via middleware or direct use, but let's keep it in registry
@@ -227,32 +214,6 @@ class PluginRegistry
                 'default_options' => [],
                 'class' => 'Tapp\FilamentProgressBarColumn\FilamentProgressBarColumnServiceProvider',
                 'package' => 'tapp/filament-progress-bar-column',
-            ],
-            'filament-knowledge-base' => [
-                'label' => 'Knowledge Base',
-                'installer' => fn (Panel $panel, array $options) => $panel->plugin(KnowledgeBasePlugin::make()),
-                'default_enabled' => true,
-                'dangerous_to_disable' => false,
-                'requires_migrations' => false,
-                'default_options' => [],
-                'class' => KnowledgeBasePlugin::class,
-                'package' => 'guava/filament-knowledge-base',
-                'npm_dependencies' => [
-                    '@tailwindcss/typography',
-                ],
-            ],
-            'filament-knowledge-base-companion' => [
-                'label' => 'Knowledge Base Companion',
-                'installer' => fn (Panel $panel, array $options) => $panel->plugin(
-                    KnowledgeBaseCompanionPlugin::make()
-                        ->knowledgeBasePanelId('knowledge-base')
-                ),
-                'default_enabled' => true,
-                'dangerous_to_disable' => false,
-                'requires_migrations' => false,
-                'default_options' => [],
-                'class' => KnowledgeBaseCompanionPlugin::class,
-                'package' => 'guava/filament-knowledge-base',
             ],
             'filament-backgrounds' => [
                 'label' => 'Filament Backgrounds',

@@ -66,18 +66,6 @@ A diagnostic tool that verifies:
 - `php artisan starter:update`: Refreshes snapshots and synchronizes the plugin registry.
 - `php artisan starter:safe-mode`: Emergency command to bypass plugin overrides.
 
-## Knowledge Base Support
-The starter kit includes built-in support for `guava/filament-knowledge-base`.
-- **Dedicated Panel**: Requires a panel with ID `knowledge-base`.
-- **Companion Plugin**: Can be enabled per panel via Plugin Management or the installation command.
-- **Theme Requirements**: All panels using KB features MUST have a custom theme with specific Tailwind directives:
-    ```css
-    @plugin "@tailwindcss/typography";
-    @source '../../../../vendor/guava/filament-knowledge-base/src/**/*';
-    @source '../../../../vendor/guava/filament-knowledge-base/resources/views/**/*';
-    ```
-- **Diagnostics**: `starter:doctor` will verify panel existence and theme directive compliance.
-
 ## Filament Backgrounds Support
 The starter kit integrates `swisnl/filament-backgrounds`.
 - **Installation**: Run `starter:install` to set up background providers and interactive configuration.
@@ -163,7 +151,6 @@ use AuthenticationLoggable;
 use CanAccessPanel;
 use HasApiTokens;
 use HasRoles;
-use HasViews;
 use LogsActivity;
 use Notifiable;
 use TwoFactorAuthenticatable;

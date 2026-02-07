@@ -228,8 +228,6 @@ class ComposerStaticInit56409a31d4c6776cd0aef00ffc53722f
             'GuzzleHttp\\Psr7\\' => 16,
             'GuzzleHttp\\Promise\\' => 19,
             'GuzzleHttp\\' => 11,
-            'Guava\\FilamentKnowledgeBase\\Database\\Factories\\' => 47,
-            'Guava\\FilamentKnowledgeBase\\' => 28,
             'GrahamCampbell\\ResultType\\' => 26,
             'Giggsey\\Locale\\' => 15,
         ),
@@ -793,14 +791,6 @@ class ComposerStaticInit56409a31d4c6776cd0aef00ffc53722f
         'GuzzleHttp\\' => 
         array (
             0 => __DIR__ . '/..' . '/guzzlehttp/guzzle/src',
-        ),
-        'Guava\\FilamentKnowledgeBase\\Database\\Factories\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/guava/filament-knowledge-base/database/factories',
-        ),
-        'Guava\\FilamentKnowledgeBase\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/guava/filament-knowledge-base/src',
         ),
         'GrahamCampbell\\ResultType\\' => 
         array (

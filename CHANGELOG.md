@@ -5,7 +5,6 @@ All notable changes to this project will be documented in this file.
 ## [1.2.0] - 2026-01-26
 
 ### Added
-- Integrated `guava/filament-knowledge-base`: Support for dedicated knowledge base panels and companion plugins.
 - Integrated `swisnl/filament-backgrounds`: Aesthetic enhancements with centralized configuration.
 - Integrated `promethys/revive`: Recycle bin with global and scoped visibility.
 - Interactive `starter:install` steps for plugin configuration, safety markers, and specific plugin setups.

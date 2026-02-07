@@ -73,13 +73,11 @@ class StarterServiceProvider extends ServiceProvider
                 ->icons([
                     'admin' => 'heroicon-o-shield-check',
                     'staff' => 'heroicon-o-identification',
-                    'knowledge-base' => 'heroicon-o-book-open',
                 ])
                 ->simple()
                 ->labels([
                     'admin' => __('Control Center'),
                     'staff' => __('Operations'),
-                    'knowledge-base' => __('Resources'),
                 ])
                 ->visible(fn (): bool => auth()->check())
                 ->canSwitchPanels(fn (): bool => auth()->check());

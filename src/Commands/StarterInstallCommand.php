@@ -62,9 +62,6 @@ class StarterInstallCommand extends Command
         // 3.2. Shield Setup
         $this->setupShield();
 
-        // 3.5. Knowledge Base Setup
-        $this->setupKnowledgeBase();
-
         // 3.6. Backgrounds Setup
         $this->setupBackgrounds();
 
@@ -279,94 +276,6 @@ class StarterInstallCommand extends Command
                 $this->error("[CRITICAL] {$result['check']}: {$result['message']}");
             } elseif ($result['status'] === 'warning') {
                 $this->warn("[WARNING] {$result['check']}: {$result['message']}");
-            }
-        }
-    }
-
-    /**
-     * Interactive setup for Knowledge Base.
-     */
-    protected function setupKnowledgeBase(): void
-    {
-        if ($this->option('no-interaction')) {
-            return;
-        }
-
-        $this->newLine();
-        $this->info('--- Knowledge Base Setup ---');
-
-        if (! $this->confirm('Do you want to set up the Knowledge Base plugin?')) {
-            return;
-        }
-
-        $kbPluginKey = 'filament-knowledge-base';
-        $kbCompanionKey = 'filament-knowledge-base-companion';
-        $kbPanelId = 'knowledge-base';
-        $panels = $this->getPanelIds();
-
-        // 1. Check for dedicated KB panel
-        if (! in_array($kbPanelId, $panels)) {
-            $this->warn("Dedicated panel '{$kbPanelId}' not found.");
-            if ($this->confirm("Do you want to create the '{$kbPanelId}' panel now?", true)) {
-                $this->call('filament:panel', ['id' => $kbPanelId]);
-                // Refresh snapshots
-                \EdrisaTuray\FilamentStarter\Support\PanelSnapshotManager::snapshot();
-                $panels = \EdrisaTuray\FilamentStarter\Models\PanelSnapshot::pluck('panel_id')->toArray();
-            }
-        } else {
-            $this->info("Panel '{$kbPanelId}' found.");
-        }
-
-        // 2. Check for NPM dependency
-        $packageJsonPath = base_path('package.json');
-        if (file_exists($packageJsonPath)) {
-            $packageJson = json_decode(file_get_contents($packageJsonPath), true);
-            $installedNpm = array_merge($packageJson['dependencies'] ?? [], $packageJson['devDependencies'] ?? []);
-            if (! isset($installedNpm['@tailwindcss/typography'])) {
-                if ($this->confirm("NPM dependency '@tailwindcss/typography' is missing. Do you want to install it now?", true)) {
-                    $this->info('Installing @tailwindcss/typography...');
-                    passthru('npm install -D @tailwindcss/typography');
-                }
-            }
-        }
-
-        // 3. Check for custom themes in panels where KB is enabled
-        foreach ($panels as $panelId) {
-            $states = \EdrisaTuray\FilamentStarter\Support\PluginStateResolver::resolve($panelId);
-            if (($states[$kbPluginKey]['enabled'] ?? false) || ($states[$kbCompanionKey]['enabled'] ?? false)) {
-                $themePath = resource_path("css/filament/{$panelId}/theme.css");
-                if (! file_exists($themePath)) {
-                    if ($this->confirm("Custom theme for panel '{$panelId}' not found. KB requires a custom theme. Create it now?", true)) {
-                        $this->call('make:filament-theme', ['panel' => $panelId]);
-                    }
-                }
-            }
-        }
-
-        $this->line('');
-        $this->info('Knowledge Base requires specific Tailwind directives in your custom themes.');
-        $this->line('Ensure your theme CSS files (e.g., resources/css/filament/admin/theme.css) include:');
-        $this->line('<comment>@plugin "@tailwindcss/typography";</comment>');
-        $this->line("<comment>@source '../../../../vendor/guava/filament-knowledge-base/src/**/*';</comment>");
-        $this->line("<comment>@source '../../../../vendor/guava/filament-knowledge-base/resources/views/**/*';</comment>");
-
-        if ($this->confirm('Do you want to enable Knowledge Base Companion in any panel now?')) {
-            $choices = $this->choice(
-                'Select panels for Knowledge Base Companion (comma separated)',
-                array_merge(['none'], $panels),
-                0,
-                null,
-                true
-            );
-
-            if (! in_array('none', $choices)) {
-                foreach ($choices as $panelId) {
-                    \EdrisaTuray\FilamentStarter\Models\PanelPluginOverride::updateOrCreate(
-                        ['panel_id' => $panelId, 'plugin_key' => 'filament-knowledge-base-companion', 'tenant_id' => null],
-                        ['enabled' => true]
-                    );
-                    $this->info("Enabled KB Companion for {$panelId}.");
-                }
             }
         }
     }
