@@ -231,7 +231,9 @@ enum Grammar: string
     case Yaml = 'yaml';
     case Zenscript = 'zenscript';
     case Zig = 'zig';
+    case Djot = 'djot';
     case Maml = 'maml';
+    case Neon = 'neon';
 
     public function aliases(): array
     {
@@ -458,7 +460,9 @@ enum Grammar: string
             self::Yaml => ["yml"],
             self::Zenscript => [],
             self::Zig => [],
+            self::Djot => ["dj"],
             self::Maml => [],
+            self::Neon => [],
             self::Antlers => [],
             self::Txt => ['plaintext', 'text', 'plain'],
         };
@@ -689,7 +693,9 @@ enum Grammar: string
             self::Yaml => 'source.yaml',
             self::Zenscript => 'source.zenscript',
             self::Zig => 'source.zig',
+            self::Djot => 'text.djot',
             self::Maml => 'source.maml',
+            self::Neon => 'source.neon',
             self::Antlers => 'text.html.statamic',
             self::Txt => 'text.plain'
         };

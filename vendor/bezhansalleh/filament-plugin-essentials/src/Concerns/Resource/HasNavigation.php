@@ -17,8 +17,7 @@ trait HasNavigation
     {
         $pluginResult = static::delegateToPlugin(
             'HasNavigation',
-            'getNavigationLabel',
-            null
+            'getNavigationLabel'
         );
 
         return (! static::isNoPluginResult($pluginResult) && filled($pluginResult))
@@ -30,8 +29,7 @@ trait HasNavigation
     {
         $pluginResult = static::delegateToPlugin(
             'HasNavigation',
-            'getNavigationIcon',
-            null
+            'getNavigationIcon'
         );
 
         return static::isNoPluginResult($pluginResult)
@@ -43,8 +41,7 @@ trait HasNavigation
     {
         $pluginResult = static::delegateToPlugin(
             'HasNavigation',
-            'getActiveNavigationIcon',
-            null
+            'getActiveNavigationIcon'
         );
 
         return static::isNoPluginResult($pluginResult)
@@ -56,8 +53,7 @@ trait HasNavigation
     {
         $pluginResult = static::delegateToPlugin(
             'HasNavigation',
-            'getNavigationGroup',
-            null
+            'getNavigationGroup'
         );
 
         return static::isNoPluginResult($pluginResult)
@@ -69,8 +65,7 @@ trait HasNavigation
     {
         $pluginResult = static::delegateToPlugin(
             'HasNavigation',
-            'getNavigationSort',
-            null
+            'getNavigationSort'
         );
 
         return static::isNoPluginResult($pluginResult)
@@ -82,8 +77,7 @@ trait HasNavigation
     {
         $pluginResult = static::delegateToPlugin(
             'HasNavigation',
-            'getNavigationBadge',
-            null
+            'getNavigationBadge'
         );
 
         return static::isNoPluginResult($pluginResult)
@@ -95,8 +89,7 @@ trait HasNavigation
     {
         $pluginResult = static::delegateToPlugin(
             'HasNavigation',
-            'getNavigationBadgeColor',
-            null
+            'getNavigationBadgeColor'
         );
 
         return static::isNoPluginResult($pluginResult)
@@ -108,8 +101,7 @@ trait HasNavigation
     {
         $pluginResult = static::delegateToPlugin(
             'HasNavigation',
-            'getNavigationBadgeTooltip',
-            null
+            'getNavigationBadgeTooltip'
         );
 
         return static::isNoPluginResult($pluginResult)
@@ -121,8 +113,7 @@ trait HasNavigation
     {
         $pluginResult = static::delegateToPlugin(
             'HasNavigation',
-            'shouldRegisterNavigation',
-            null
+            'shouldRegisterNavigation'
         );
 
         return static::isNoPluginResult($pluginResult)
@@ -134,8 +125,7 @@ trait HasNavigation
     {
         $pluginResult = static::delegateToPlugin(
             'HasNavigation',
-            'getNavigationParentItem',
-            null
+            'getNavigationParentItem'
         );
 
         return static::isNoPluginResult($pluginResult)
@@ -147,8 +137,7 @@ trait HasNavigation
     {
         $pluginResult = static::delegateToPlugin(
             'HasNavigation',
-            'getSubNavigationPosition',
-            null
+            'getSubNavigationPosition'
         );
 
         return static::isNoPluginResult($pluginResult)

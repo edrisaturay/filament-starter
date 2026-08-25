@@ -2,6 +2,7 @@
 
 namespace Croustibat\FilamentJobsMonitor\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 class FailedJob extends Model
@@ -24,5 +25,13 @@ class FailedJob extends Model
     {
         return config('queue.failed.database')
             ?? config('database.default');
+    }
+
+    public function scopeForTenant(Builder $query, string $tenantId): Builder
+    {
+        $column = config('filament-jobs-monitor.tenancy.column', 'tenant_id');
+        $strlenTenantId = strlen($tenantId);
+
+        return $query->where('payload', 'LIKE', '%"'.$column.'";s:'.$strlenTenantId.':"'.$tenantId.'";%');
     }
 }

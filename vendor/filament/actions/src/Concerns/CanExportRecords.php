@@ -2,7 +2,6 @@
 
 namespace Filament\Actions\Concerns;
 
-use AnourValar\EloquentSerialize\Facades\EloquentSerializeFacade;
 use Closure;
 use Filament\Actions\Action;
 use Filament\Actions\ExportAction;
@@ -24,12 +23,14 @@ use Filament\Schemas\Components\Fieldset;
 use Filament\Schemas\Components\Flex;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
+use Filament\Support\EloquentSerializer\EloquentSerializer;
 use Filament\Support\Enums\Size;
 use Filament\Support\Enums\Width;
 use Filament\Support\Facades\FilamentIcon;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Contracts\HasTable;
 use Illuminate\Bus\PendingBatch;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Bus\PendingChain;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
@@ -283,7 +284,8 @@ trait CanExportRecords
             // Temporary save to obtain the sequence number of the export file.
             $export->save();
 
-            // Delete the export directory to prevent data contamination from previous exports with the same ID.
+            // Delete the export directory to prevent data contamination
+            // from previous exports with the same ID.
             $export->deleteFileDirectory();
 
             $export->file_name = $action->getFileName($export) ?? $exporter->getFileName($export);
@@ -293,15 +295,16 @@ trait CanExportRecords
             $hasCsv = in_array(ExportFormat::Csv, $formats);
             $hasXlsx = in_array(ExportFormat::Xlsx, $formats);
 
-            $serializedQuery = EloquentSerializeFacade::serialize($query);
+            $serializedQuery = app(EloquentSerializer::class)->serialize($query);
 
             $job = $action->getJob();
             $jobQueue = $exporter->getJobQueue();
             $jobConnection = $exporter->getJobConnection();
             $jobBatchName = $exporter->getJobBatchName();
 
-            // We do not want to send the loaded user relationship to the queue in job payloads,
-            // in case it contains attributes that are not serializable, such as binary columns.
+            // We do not want to send the loaded user relationship to the
+            // queue in job payloads, in case it contains attributes that
+            // are not serializable, such as binary columns.
             $export->unsetRelation('user');
 
             $makeCreateXlsxFileJob = fn (): CreateXlsxFile => app(CreateXlsxFile::class, [
@@ -548,6 +551,9 @@ trait CanExportRecords
 
     public function modifyQueryUsing(?Closure $callback): static
     {
+        // Security: Exports do not check per-record policies. Use this
+        // to scope the query to records the user is authorized to see.
+
         $this->modifyQueryUsing = $callback;
 
         return $this;
@@ -603,5 +609,14 @@ trait CanExportRecords
         }
 
         return $authGuard->name;
+    }
+
+    /**
+     * @param  Model | array<string, mixed> | null  $record
+     * @return Model | array<string, mixed> | null
+     */
+    protected function ensureCorrectRecordType(Model | array | null $record): Model | array | null
+    {
+        return $record;
     }
 }

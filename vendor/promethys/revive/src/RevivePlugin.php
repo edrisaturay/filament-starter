@@ -6,7 +6,6 @@ use Closure;
 use Filament\Contracts\Plugin;
 use Filament\Panel;
 use Filament\Support\Concerns\EvaluatesClosures;
-use Livewire\Component;
 use Promethys\Revive\Pages\RecycleBin as RecycleBinPage;
 use Promethys\Revive\Tables\RecycleBin as RecycleBinTable;
 
@@ -18,7 +17,7 @@ final class RevivePlugin implements Plugin
 
     protected string $page = RecycleBinPage::class;
 
-    protected string $table = RecycleBinTable::class; // raw value 'revive::tables.recycle-bin'
+    protected string $table = RecycleBinTable::class;
 
     protected string | Closure | null $navigationGroup = null;
 
@@ -392,33 +391,4 @@ final class RevivePlugin implements Plugin
             ->enableTenantScoping(false)
             ->showAllRecords(true);
     }
-
-    /**
-     * TODO: register custom table. Also do a custom page registering.
-     *
-     * @return RevivePlugin
-     */
-    // public function table(Component $table): static
-    // {
-    //     $this->table = $table;
-
-    //     return $this;
-    // }
-
-    // public function getTable(): Component
-    // {
-    //     return $this->evaluate($this->table);
-    // }
-
-    // public function page(Component $table): static
-    // {
-    //     $this->table = $table;
-
-    //     return $this;
-    // }
-
-    // public function getPage(): Component
-    // {
-    //     return $this->evaluate($this->table);
-    // }
 }

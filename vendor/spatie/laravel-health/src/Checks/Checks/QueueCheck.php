@@ -7,28 +7,17 @@ use Composer\InstalledVersions;
 use Illuminate\Support\Arr;
 use Spatie\Health\Checks\Check;
 use Spatie\Health\Checks\Result;
+use Spatie\Health\Traits\HasFailedAfter;
 
 class QueueCheck extends Check
 {
-    protected ?string $cacheKey = 'health:checks:queue:latestHeartbeatAt';
+    use HasFailedAfter;
 
-    protected ?string $cacheStoreName = null;
+    protected ?string $cacheKey = 'health:checks:queue:latestHeartbeatAt';
 
     protected int $failWhenTestJobTakesLongerThanMinutes = 5;
 
     protected ?array $onQueues;
-
-    public function useCacheStore(string $cacheStoreName): self
-    {
-        $this->cacheStoreName = $cacheStoreName;
-
-        return $this;
-    }
-
-    public function getCacheStoreName(): string
-    {
-        return $this->cacheStoreName ?? config('cache.default');
-    }
 
     public function cacheKey(string $cacheKey): self
     {
@@ -44,7 +33,7 @@ class QueueCheck extends Check
         return $this;
     }
 
-    public function getCacheKey(string $queue): string
+    public function getHeartbeatCacheKey(string $queue): string
     {
         return "{$this->cacheKey}.{$queue}";
     }
@@ -71,7 +60,7 @@ class QueueCheck extends Check
         $fails = [];
 
         foreach ($this->getQueues() as $queue) {
-            $lastHeartbeatTimestamp = cache()->store($this->cacheStoreName)->get($this->getCacheKey($queue));
+            $lastHeartbeatTimestamp = $this->cacheStore()->get($this->getHeartbeatCacheKey($queue));
 
             if (! $lastHeartbeatTimestamp) {
                 $fails[] = "The `{$queue}` queue did not run yet.";
@@ -91,18 +80,16 @@ class QueueCheck extends Check
             }
 
             if ($minutesAgo > $this->failWhenTestJobTakesLongerThanMinutes) {
-                $fails[] = "The last run of the `{$queue}` queue was more than {$minutesAgo} minutes ago.";
+                $roundedMinutes = round($minutesAgo, 2);
+                $fails[] = "The last run of the `{$queue}` queue was more than {$roundedMinutes} minutes ago.";
             }
         }
 
-        $result = Result::make();
-
         if (! empty($fails)) {
-            $result->meta($fails);
-
-            return $result->failed('Queue jobs running failed. Check meta for more information.');
+            return $this->handleFailure('Queue jobs running failed. Check meta for more information.')
+                ->meta($fails);
         }
 
-        return $result->ok();
+        return $this->handleSuccess();
     }
 }

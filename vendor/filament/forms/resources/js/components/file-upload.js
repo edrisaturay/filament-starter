@@ -9,7 +9,7 @@ import FilePondPluginImageExifOrientation from 'filepond-plugin-image-exif-orien
 import FilePondPluginImagePreview from 'filepond-plugin-image-preview'
 import FilePondPluginImageResize from 'filepond-plugin-image-resize'
 import FilePondPluginImageTransform from 'filepond-plugin-image-transform'
-import FilePondPluginMediaPreview from 'filepond-plugin-media-preview'
+import FilePondPluginMediaPreview from './file-upload/filepond-plugin-media-preview'
 
 FilePond.registerPlugin(FilePondPluginFileValidateSize)
 FilePond.registerPlugin(FilePondPluginFileValidateType)
@@ -104,7 +104,63 @@ export default function fileUploadFormComponent({
 
         editor: {},
 
+        visibilityObserver: null,
+
+        intersectionObserver: null,
+
+        isInitializing: false,
+
         async init() {
+            if (this.pond || this.isInitializing) {
+                return
+            }
+
+            this.isInitializing = true
+
+            // https://github.com/filamentphp/filament/issues/15394
+            // https://github.com/filamentphp/filament/issues/16253
+            // https://github.com/filamentphp/filament/issues/19522
+            if (!this.visibilityObserver) {
+                const onVisible = () => {
+                    const isHidden =
+                        this.$el.offsetParent === null ||
+                        getComputedStyle(this.$el).visibility === 'hidden'
+
+                    if (isHidden) {
+                        return
+                    }
+
+                    if (!this.pond) {
+                        this.init()
+                    } else {
+                        document.dispatchEvent(new Event('visibilitychange'))
+                    }
+                }
+
+                this.visibilityObserver = new ResizeObserver(() => onVisible())
+                this.visibilityObserver.observe(this.$el)
+
+                this.intersectionObserver = new IntersectionObserver(
+                    (entries) => {
+                        if (entries[0]?.isIntersecting) {
+                            onVisible()
+                        }
+                    },
+                    { threshold: 0 },
+                )
+                this.intersectionObserver.observe(this.$el)
+            }
+
+            const isHidden =
+                this.$el.offsetParent === null ||
+                getComputedStyle(this.$el).visibility === 'hidden'
+
+            if (isHidden) {
+                this.isInitializing = false
+
+                return
+            }
+
             FilePond.setOptions(locales[locale] ?? locales['en'])
 
             this.pond = FilePond.create(this.$refs.input, {
@@ -130,7 +186,8 @@ export default function fileUploadFormComponent({
                 itemInsertLocation: shouldAppendFiles ? 'after' : 'before',
                 ...(placeholder && { labelIdle: placeholder }),
                 maxFiles,
-                fileAttachmentsMaxFileSize: maxSize,
+                maxFileSize: maxSize,
+                mediaPreviewHeight: imagePreviewHeight,
                 minFileSize: minSize,
                 ...(maxParallelUploads && { maxParallelUploads }),
                 styleButtonProcessItemPosition: uploadButtonPosition,
@@ -387,13 +444,20 @@ export default function fileUploadFormComponent({
                     this.checkImageAspectRatio(fileItem.file)
                 })
             }
+
+            this.isInitializing = false
         },
 
         destroy() {
+            this.visibilityObserver?.disconnect()
+            this.intersectionObserver?.disconnect()
+
             this.destroyEditor()
 
-            FilePond.destroy(this.$refs.input)
-            this.pond = null
+            if (this.pond) {
+                FilePond.destroy(this.$refs.input)
+                this.pond = null
+            }
         },
 
         dispatchFormEvent(name, detail = {}) {
@@ -433,6 +497,10 @@ export default function fileUploadFormComponent({
                 files.push({
                     source: uploadedFile.url,
                     options: {
+                        metadata: {
+                            openableUrl: uploadedFile.openableUrl,
+                            downloadableUrl: uploadedFile.downloadableUrl,
+                        },
                         type: 'local',
                         ...(!uploadedFile.type ||
                         (isPreviewable &&
@@ -489,30 +557,31 @@ export default function fileUploadFormComponent({
         },
 
         getDownloadLink(file) {
-            let fileSource = file.source
+            let downloadableUrl =
+                file.getMetadata('downloadableUrl') ?? file.source
 
-            if (!fileSource) {
+            if (!downloadableUrl) {
                 return
             }
 
             const anchor = document.createElement('a')
             anchor.className = 'filepond--download-icon'
-            anchor.href = fileSource
+            anchor.href = downloadableUrl
             anchor.download = file.file.name
 
             return anchor
         },
 
         getOpenLink(file) {
-            let fileSource = file.source
+            let openableUrl = file.getMetadata('openableUrl') ?? file.source
 
-            if (!fileSource) {
+            if (!openableUrl) {
                 return
             }
 
             const anchor = document.createElement('a')
             anchor.className = 'filepond--open-icon'
-            anchor.href = fileSource
+            anchor.href = openableUrl
             anchor.target = '_blank'
 
             return anchor
@@ -862,6 +931,7 @@ import de from 'filepond/locale/de-de'
 import el from 'filepond/locale/el-el'
 import en from 'filepond/locale/en-en'
 import es from 'filepond/locale/es-es'
+import et from 'filepond/locale/et-ee'
 import fa from 'filepond/locale/fa_ir'
 import fi from 'filepond/locale/fi-fi'
 import fr from 'filepond/locale/fr-fr'
@@ -904,6 +974,7 @@ const locales = {
     el,
     en,
     es,
+    et,
     fa,
     fi,
     fr,

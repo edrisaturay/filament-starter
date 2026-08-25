@@ -12,11 +12,13 @@ class BackupCollection extends Collection
     protected ?float $sizeCache = null;
 
     /** @param array<string> $files */
-    public static function createFromFiles(?FileSystem $disk, array $files): self
+    public static function createFromFiles(?Filesystem $disk, array $files): self
     {
+        $file = new File;
+
         return (new static($files))
-            ->filter(fn (string $path) => (new File)->isZipFile($disk, $path))
-            ->map(fn (string $path): \Spatie\Backup\BackupDestination\Backup => new Backup($disk, $path))
+            ->filter(fn (string $path) => $file->isZipFile($disk, $path))
+            ->map(fn (string $path): Backup => new Backup($disk, $path))
             ->sortByDesc(fn (Backup $backup) => $backup->date()->timestamp)
             ->values();
     }

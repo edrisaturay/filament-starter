@@ -7,23 +7,26 @@ use AlizHarb\ActivityLog\ActivityLogPlugin;
 use Asmit\ResizedColumn\ResizedColumnPlugin;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use CharrafiMed\GlobalSearchModal\GlobalSearchModalPlugin;
+use Cocosmos\FilamentQuickAddSelect\FilamentQuickAddServiceProvider;
 use Croustibat\FilamentJobsMonitor\FilamentJobsMonitorPlugin;
 use EdrisaTuray\FilamentApiDocsBuilder\FilamentApiDocsBuilderPlugin;
 use Filament\Panel;
+use Illuminate\Support\Facades\DB;
 use Jeffgreco13\FilamentBreezy\BreezyCore;
 use Promethys\Revive\RevivePlugin;
 use pxlrbt\FilamentEnvironmentIndicator\EnvironmentIndicatorPlugin;
 use RickDBCN\FilamentEmail\FilamentEmail;
 use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackupPlugin;
 use ShuvroRoy\FilamentSpatieLaravelHealth\FilamentSpatieLaravelHealthPlugin;
+use Slimani\MediaManager\MediaManagerPlugin;
 use Swis\Filament\Backgrounds\FilamentBackgroundsPlugin;
 use Swis\Filament\Backgrounds\ImageProviders\CuratedBySwis;
 use Swis\Filament\Backgrounds\ImageProviders\MyImages;
 use Swis\Filament\Backgrounds\ImageProviders\Triangles;
 use Tapp\FilamentAuthenticationLog\FilamentAuthenticationLogPlugin;
 use TomatoPHP\FilamentUsers\FilamentUsersPlugin;
-use BezhanSalleh\PanelSwitch\PanelSwitch;
 use WatheqAlshowaiter\FilamentStickyTableHeader\StickyTableHeaderPlugin;
+use Zvizvi\FilamentColumnFilters\FilamentColumnFiltersPlugin;
 
 /**
  * Class PluginRegistry
@@ -278,7 +281,7 @@ class PluginRegistry
                 'dangerous_to_disable' => false,
                 'requires_migrations' => false,
                 'default_options' => [],
-                'class' => \Cocosmos\FilamentQuickAddSelect\FilamentQuickAddServiceProvider::class,
+                'class' => FilamentQuickAddServiceProvider::class,
                 'package' => 'cocosmos/filament-quick-add-select',
             ],
             'filament-api-docs-builder' => [
@@ -301,6 +304,43 @@ class PluginRegistry
                 'class' => FilamentUsersPlugin::class,
                 'package' => 'tomatophp/filament-users',
             ],
+            'filament-language-switch' => [
+                'label' => 'Language Switcher',
+                'installer' => fn (Panel $panel, array $options) => $panel, // Configured globally in Service Provider usually
+                'default_enabled' => true,
+                'dangerous_to_disable' => false,
+                'requires_migrations' => false,
+                'default_options' => [],
+                'class' => \BezhanSalleh\LanguageSwitch\LanguageSwitch::class,
+                'package' => 'bezhansalleh/filament-language-switch',
+            ],
+            'filament-settings' => [
+                'label' => 'Spatie Settings',
+                'installer' => fn (Panel $panel, array $options) => $panel, // Service provider only
+                'default_enabled' => true,
+                'dangerous_to_disable' => false,
+                'requires_migrations' => true,
+                'default_options' => [],
+                'package' => 'filament/spatie-laravel-settings-plugin',
+            ],
+            'filament-tags' => [
+                'label' => 'Spatie Tags',
+                'installer' => fn (Panel $panel, array $options) => $panel, // Components only
+                'default_enabled' => true,
+                'dangerous_to_disable' => false,
+                'requires_migrations' => true,
+                'default_options' => [],
+                'package' => 'filament/spatie-laravel-tags-plugin',
+            ],
+            'filament-media-library' => [
+                'label' => 'Spatie Media Library',
+                'installer' => fn (Panel $panel, array $options) => $panel, // Components only
+                'default_enabled' => true,
+                'dangerous_to_disable' => false,
+                'requires_migrations' => true,
+                'default_options' => [],
+                'package' => 'filament/spatie-laravel-media-library-plugin',
+            ],
             'filament-panel-switch' => [
                 'label' => 'Panel Switcher',
                 'installer' => fn (Panel $panel, array $options) => $panel, // Configured globally in Service Provider
@@ -310,6 +350,41 @@ class PluginRegistry
                 'default_options' => [],
                 'class' => 'BezhanSalleh\PanelSwitch\PanelSwitchServiceProvider',
                 'package' => 'bezhansalleh/filament-panel-switch',
+            ],
+            'media-manager' => [
+                'label' => 'Media Manager',
+                'installer' => fn (Panel $panel, array $options) => $panel->plugin(MediaManagerPlugin::make()),
+                'default_enabled' => false,
+                'dangerous_to_disable' => false,
+                'requires_migrations' => true,
+                'default_options' => [],
+                'class' => MediaManagerPlugin::class,
+                'package' => 'slimani/filament-media-manager',
+            ],
+            'column-filters' => [
+                'label' => 'Column Filters',
+                'installer' => fn (Panel $panel, array $options) => $panel->plugin(FilamentColumnFiltersPlugin::make()),
+                'default_enabled' => true,
+                'dangerous_to_disable' => false,
+                'requires_migrations' => false,
+                'default_options' => [],
+                'class' => FilamentColumnFiltersPlugin::class,
+                'package' => 'zvizvi/filament-column-filters',
+            ],
+            'filament-logger' => [
+                'label' => 'Filament Logger',
+                'installer' => function (Panel $panel, array $options): void {
+                    $resource = config('filament-logger.activity_resource');
+                    if ($resource) {
+                        $panel->resources([$resource]);
+                    }
+                },
+                'default_enabled' => false,
+                'dangerous_to_disable' => false,
+                'requires_migrations' => true,
+                'default_options' => [],
+                'class' => null,
+                'package' => 'mradder/filament-logger',
             ],
         ];
     }
@@ -326,7 +401,7 @@ class PluginRegistry
         // 1. Check DB overrides first if panelId is provided
         if ($panelId) {
             try {
-                $override = \Illuminate\Support\Facades\DB::table('starter_panel_plugin_overrides')
+                $override = DB::table('starter_panel_plugin_overrides')
                     ->where('panel_id', $panelId)
                     ->where('plugin_key', $key)
                     ->whereNull('tenant_id')

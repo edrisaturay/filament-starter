@@ -5,6 +5,62 @@ All notable changes to `filament-activity-log` will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.2] - 2026-04-16
+
+### Fixed
+
+- **Widget Registration Config** - `ActivityLogPlugin::getWidgets()` now respects the configured `filament-activity-log.widgets.widgets` list instead of always registering a hardcoded widget set.
+- **Documentation Cleanup** - Removed stale references to `CONFIGURATION.md` and corrected the custom authorizer example namespace in the README.
+- **Relation Manager Sorting** - `ActivitiesRelationManager` now uses the configured default sort column and direction, matching the main activity resource.
+- **Subject ID Discovery** - Added a configurable `subject_id` table column and exact-match filter to make locating activity records by related model ID much easier.
+- **Spatie v5 Compatibility** - Hardened test bootstrap and change normalization logic for the v5 `attribute_changes` schema and migration flow.
+
+### Technical Details
+
+- ✅ Full Pest suite passing
+- ✅ Verified on the Spatie v5 lane
+- ✅ Backward compatible configuration defaults preserved
+
+## [1.3.1] - 2026-02-06
+
+### Fixed
+
+- **Multi-Panel Support** - Fixed an issue where Select filters and causer resolution failed in multi-panel applications using different auth guards.
+  - Introduced `ActivityLogCauser` support class for dynamic model resolution based on current panel guard.
+  - Refactored `UserActivitiesPage` and `ActivityLogTable` to use panel-aware causer resolution.
+
+## [1.3.0] - 2026-01-31
+
+### Added
+
+- **Audit Dashboard** - A comprehensive new dashboard page for high-level activity monitoring.
+  - **Activity Stats** - View total activities, top causer, and top subject at a glance.
+  - **Activity Heatmap** - Visualize activity frequency over the past year.
+  - **Activity Chart** - Integrated trend analysis widget.
+- **Integrated Middleware Context** - Automatically capture IP Address, User Agent, and Batch UUID without manual tap configuration.
+- **Selective Revert** - Enhanced revert action allows selecting specific fields to roll back via a checkbox-based form.
+- **Restore Action** - Recreate deleted models directly from activity log data with a single click.
+- **Log Pruning UI** - New "Prune" action in the `ActivityLogResource` to clean up old logs based on date.
+- **Slim Timeline** - Introduced a compact "slim" mode for the timeline view, optimized for dashboards and sidebars.
+- **Activity Heatmap** - Completely redesigned GitHub-style contribution graph with dark mode support.
+- **Improved Timeline** - Added auto-pagination (limit 50) for significantly better performance on large datasets.
+
+### Improved
+
+- **Localization** - Expanded dictionary with support for all new v1.3.0 actions and dashboard components.
+- **Authorization** - Improved Gate-based authorization checks for all resource actions.
+
+### Fixed
+
+- **Resource Links** - Corrected URL generation for subject and causer resources in `ActivityLogTable`.
+- **UI Consistency** - Standardized button colors, icons, and labels across all actions.
+
+### Technical Details
+
+- ✅ All tests passed (Feature and Unit)
+- ✅ Code simplified and linted (Laravel Pint)
+- ✅ 100% strict typing consistency
+
 ## [1.2.0] - 2026-01-17
 
 ### Added
@@ -74,7 +130,6 @@ See [UPGRADE.md](UPGRADE.md) for detailed migration instructions.
   - Example: `'custom_authorization' => fn($user) => $user->id === 1`
 
 - **Documentation**
-  - Added `CONFIGURATION.md` - Comprehensive configuration guide with navigation and authorization examples
   - Added `SOLUTIONS.md` - Direct solutions to common configuration issues
 
 ### Changed
@@ -89,7 +144,7 @@ See [UPGRADE.md](UPGRADE.md) for detailed migration instructions.
   - Custom callback checked first before permission system
   - Provides flexible authorization without Laravel permissions
 
-- **README.md** - Added references to new configuration documentation and custom authorization examples
+- **README.md** - Added configuration and custom authorization examples
 
 ### Technical Details
 

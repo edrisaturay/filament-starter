@@ -2,6 +2,7 @@
 title: Import action
 ---
 import Aside from "@components/Aside.astro"
+import AutoScreenshot from "@components/AutoScreenshot.astro"
 import UtilityInjection from "@components/UtilityInjection.astro"
 
 ## Introduction
@@ -36,6 +37,8 @@ use Filament\Actions\ImportAction;
 ImportAction::make()
     ->importer(ProductImporter::class)
 ```
+
+<AutoScreenshot name="actions/import-action/modal" alt="Import action modal" version="5.x" />
 
 If you want to add this action to the header of a table, you may do so like this:
 
@@ -690,6 +693,49 @@ ImportAction::make()
 
 <UtilityInjection set="actions" version="5.x">As well as allowing a static value, the `headerOffset()` method also accepts a function to dynamically calculate it. You can inject various utilities into the function as parameters.</UtilityInjection>
 
+## Customizing the completion notification
+
+When an import finishes, Filament sends a notification to the user who started it. You can customize the title and body of that notification by overriding `getCompletedNotificationTitle()` and `getCompletedNotificationBody()` on your importer:
+
+```php
+use Filament\Actions\Imports\Models\Import;
+
+public static function getCompletedNotificationTitle(Import $import): string
+{
+    return 'Your product import has finished';
+}
+
+public static function getCompletedNotificationBody(Import $import): string
+{
+    return $import->successful_rows . ' products were imported.';
+}
+```
+
+For anything beyond the title and body — for example, changing the notification color, adding extra actions, or replacing the icon — override `modifyCompletedNotification()`. You can either mutate the `Notification` passed in and return it, or build and return a completely new one:
+
+```php
+use Filament\Actions\Action;
+use Filament\Actions\Imports\Models\Import;
+use Filament\Notifications\Notification;
+
+public static function modifyCompletedNotification(Notification $notification, Import $import): Notification
+{
+    $notification->icon('heroicon-o-shopping-bag');
+
+    if ($import->getOptions()['sendWelcomeEmails'] ?? false) {
+        $notification->actions([
+            ...$notification->getActions(),
+            Action::make('viewWelcomeEmails')
+                ->url(route('emails.sent')),
+        ]);
+    }
+
+    return $notification;
+}
+```
+
+The `Import` model exposes the column mapping and options the user selected via `$import->getColumnMap()` and `$import->getOptions()`, so you can tailor the notification based on what the user imported.
+
 ## Customizing the import job
 
 The default job for processing imports is `Filament\Actions\Imports\Jobs\ImportCsv`. If you want to extend this class and override any of its methods, you may replace the original class in the `register()` method of a service provider:
@@ -752,7 +798,7 @@ If you'd like to customize the middleware that is applied to jobs of a certain i
 
 ### Customizing the import job retries
 
-By default, the import system will retry a job for 24 hours, or until it fails 5 times with unhandled exceptions, whichever happens first. This is to allow for temporary issues, such as the database being unavailable, to be resolved. You may change the time period for the job to retry, which is defined in the `getJobRetryUntil()` method on the exporter class:
+By default, the import system will retry a job for 24 hours, or until it fails 5 times with unhandled exceptions, whichever happens first. This is to allow for temporary issues, such as the database being unavailable, to be resolved. You may change the time period for the job to retry, which is defined in the `getJobRetryUntil()` method on the importer class:
 
 ```php
 use Carbon\CarbonInterface;
@@ -954,3 +1000,19 @@ public function view(User $user, Import $import): bool
     return $import->user()->is($user);
 }
 ```
+
+## Security
+
+### Per-record authorization
+
+The import system does not perform per-record authorization checks when creating or updating records. Each row from the CSV is processed by the importer's `resolveRecord()`, `fillRecord()`, and `saveRecord()` methods without consulting your application's [Laravel policies](https://laravel.com/docs/authorization#creating-policies). This means that if a user is allowed to trigger an import, they can create or update any record that the importer supports, regardless of whether they would normally be authorized to do so through your application's UI.
+
+If you need per-record authorization during import, you should add checks in your importer's [lifecycle hooks](#lifecycle-hooks), such as `beforeCreate()` or `beforeUpdate()`, to authorize the current user against the record.
+
+<Aside variant="danger">
+    If your application allows untrusted users to trigger imports, you should implement per-record authorization checks to prevent unauthorized record creation or modification.
+</Aside>
+
+### CSV formula injection
+
+When rows fail validation during import, Filament compiles them into a downloadable CSV for the user to review. This failure CSV contains the original data from the uploaded file exactly as it was submitted, without any transformation. If the uploaded CSV contains values beginning with characters like `=`, `+`, `-`, or `@`, they will appear unchanged in the failure CSV. When opened in spreadsheet software such as Microsoft Excel or Google Sheets, these values may be interpreted as formulas, which could pose a security risk if the original CSV was provided by an untrusted source. You should ensure that your users are aware of this risk when reviewing failure CSVs, or implement sanitization in your importer's lifecycle hooks to neutralize potentially dangerous values before they are stored as failed rows.

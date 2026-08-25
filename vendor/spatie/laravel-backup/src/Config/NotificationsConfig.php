@@ -19,6 +19,7 @@ class NotificationsConfig extends Data
         public NotificationMailConfig $mail,
         public NotificationSlackConfig $slack,
         public ?NotificationDiscordConfig $discord,
+        public ?NotificationWebhookConfig $webhook,
     ) {
         if (! class_exists($this->notifiable)) {
             throw InvalidConfig::invalidStrategy($this->notifiable);
@@ -29,11 +30,12 @@ class NotificationsConfig extends Data
     public static function fromArray(array $data): self
     {
         return new self(
-            notifications: $data['notifications'],
-            notifiable: $data['notifiable'],
+            notifications: $data['notifications'] ?? [],
+            notifiable: $data['notifiable'] ?? Notifiable::class,
             mail: NotificationMailConfig::fromArray($data['mail']),
             slack: NotificationSlackConfig::fromArray($data['slack']),
             discord: isset($data['discord']) ? NotificationDiscordConfig::fromArray($data['discord']) : null,
+            webhook: isset($data['webhook']) ? NotificationWebhookConfig::fromArray($data['webhook']) : null,
         );
     }
 }

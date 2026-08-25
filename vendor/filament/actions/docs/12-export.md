@@ -2,6 +2,7 @@
 title: Export action
 ---
 import Aside from "@components/Aside.astro"
+import AutoScreenshot from "@components/AutoScreenshot.astro"
 import UtilityInjection from "@components/UtilityInjection.astro"
 
 ## Introduction
@@ -34,6 +35,8 @@ use Filament\Actions\ExportAction;
 ExportAction::make()
     ->exporter(ProductExporter::class)
 ```
+
+<AutoScreenshot name="actions/export-action/modal" alt="Export action modal" version="5.x" />
 
 If you want to add this action to the header of a table, you may do so like this:
 
@@ -750,6 +753,49 @@ public function configureXlsxWriterBeforeClose(Writer $writer): Writer
 }
 ```
 
+## Customizing the completion notification
+
+When an export finishes, Filament sends a notification to the user who started it. You can customize the title and body of that notification by overriding `getCompletedNotificationTitle()` and `getCompletedNotificationBody()` on your exporter:
+
+```php
+use Filament\Actions\Exports\Models\Export;
+
+public static function getCompletedNotificationTitle(Export $export): string
+{
+    return 'Your product export is ready';
+}
+
+public static function getCompletedNotificationBody(Export $export): string
+{
+    return $export->successful_rows . ' products were exported.';
+}
+```
+
+For anything beyond the title and body — for example, changing the notification color, adding extra actions, or replacing the icon — override `modifyCompletedNotification()`. You can either mutate the `Notification` passed in and return it, or build and return a completely new one:
+
+```php
+use Filament\Actions\Action;
+use Filament\Actions\Exports\Models\Export;
+use Filament\Notifications\Notification;
+
+public static function modifyCompletedNotification(Notification $notification, Export $export): Notification
+{
+    $notification->icon('heroicon-o-shopping-bag');
+
+    if ($export->getOptions()['notifyTeam'] ?? false) {
+        $notification->actions([
+            ...$notification->getActions(),
+            Action::make('shareWithTeam')
+                ->url(route('exports.share', $export)),
+        ]);
+    }
+
+    return $notification;
+}
+```
+
+The `Export` model exposes the column mapping and options the user selected via `$export->getColumnMap()` and `$export->getOptions()`, so you can tailor the notification based on what the user exported.
+
 ## Customizing the export job
 
 The default job for processing exports is `Filament\Actions\Exports\Jobs\PrepareCsvExport`. If you want to extend this class and override any of its methods, you may replace the original class in the `register()` method of a service provider:
@@ -889,3 +935,29 @@ public function view(User $user, Export $export): bool
     return $export->user()->is($user);
 }
 ```
+
+## Security
+
+### Per-record authorization
+
+The export system does not perform per-record authorization checks. When an export is triggered, all records matching the table query (or the model's full dataset, if used outside a table) are included in the export without consulting your application's [Laravel policies](https://laravel.com/docs/authorization#creating-policies). This means that if a user is allowed to trigger an export, they may receive records they would not normally be authorized to view through your application's UI.
+
+If you need to restrict which records are exported, you should scope the query using the [`modifyQueryUsing()` method](#modifying-the-eloquent-query):
+
+```php
+use Illuminate\Database\Eloquent\Builder;
+
+ExportAction::make()
+    ->exporter(ProductExporter::class)
+    ->modifyQueryUsing(fn (Builder $query) => $query->whereBelongsTo(auth()->user()))
+```
+
+You could also apply [global scopes](https://laravel.com/docs/eloquent#global-scopes) to your model to ensure that only authorized records are ever queried.
+
+<Aside variant="danger">
+    If your application has per-record visibility rules, you should scope the export query to ensure users only receive records they are authorized to view.
+</Aside>
+
+### CSV formula injection
+
+Filament's export system writes data to CSV and XLSX files exactly as it is stored in the database, without any transformation. This means that if your database contains values beginning with characters like `=`, `+`, `-`, or `@`, they will appear unchanged in the exported file. When opened in spreadsheet software such as Microsoft Excel or Google Sheets, these values may be interpreted as formulas, which could pose a security risk if your data includes untrusted or user-submitted content. You should ensure that your users are aware of this risk, or sanitize the data before export using the [`formatStateUsing()` method](export#formatting-the-value-of-an-export-column) on each column, for example by prefixing values with a single quote (`'`) to prevent formula interpretation.

@@ -12,6 +12,7 @@ use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 
 /**
  * Activities Relation Manager.
@@ -63,12 +64,16 @@ class ActivitiesRelationManager extends RelationManager
     {
         return $table
             ->recordTitleAttribute('description')
+            ->defaultSort(
+                config('filament-activity-log.resource.default_sort_column', 'created_at'),
+                config('filament-activity-log.resource.default_sort_direction', 'desc')
+            )
             ->modifyQueryUsing(function (Builder $query) {
-                /** @var \Illuminate\Database\Eloquent\Model $record */
+                /** @var Model $record */
                 $record = $this->getOwnerRecord();
 
-                // If the record is a user (or has actions relationship), also include activities they caused
-                if (method_exists($record, 'actions')) {
+                // Also include activities the record caused (v5: activitiesAsCauser, v4: actions)
+                if (method_exists($record, 'activitiesAsCauser') || method_exists($record, 'actions')) {
                     $query->orWhere(function (Builder $subQuery) use ($record) {
                         $subQuery->where('causer_id', $record->getKey())
                             ->where('causer_type', $record->getMorphClass());

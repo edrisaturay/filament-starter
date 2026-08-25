@@ -78,9 +78,7 @@ class StarterServiceProvider extends ServiceProvider
                 ->labels([
                     'admin' => __('Control Center'),
                     'staff' => __('Operations'),
-                ])
-                ->visible(fn (): bool => auth()->check())
-                ->canSwitchPanels(fn (): bool => auth()->check());
+                ]);
 
             // Only show panels that are actually enabled for the user
             $panelSwitch->panels(function () {

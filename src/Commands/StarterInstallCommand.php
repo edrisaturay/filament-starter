@@ -59,6 +59,9 @@ class StarterInstallCommand extends Command
         // 3. Interactive Plugin Configuration
         $this->configurePlugins();
 
+        // 3.1 Run migrations again for any plugin migrations published during configuration
+        $this->call('migrate', ['--force' => true]);
+
         // 3.2. Shield Setup
         $this->setupShield();
 
@@ -145,9 +148,28 @@ class StarterInstallCommand extends Command
                 continue;
             }
 
+            $installCommand = $this->pluginsWithInstallCommand()[$key] ?? null;
+            if ($installCommand) {
+                $this->info("Running {$definition['label']} install ({$installCommand})...");
+                $this->call($installCommand);
+                continue;
+            }
+
             $this->publishPluginConfig($definition);
             $this->publishPluginMigrations($key);
         }
+    }
+
+    /**
+     * Plugins that provide their own install command (publish config + migrations).
+     *
+     * @return array<string, string>
+     */
+    protected function pluginsWithInstallCommand(): array
+    {
+        return [
+            'filament-logger' => 'filament-logger:install',
+        ];
     }
 
     /**
@@ -163,12 +185,15 @@ class StarterInstallCommand extends Command
         }
 
         $this->info("Publishing config for {$definition['label']}...");
-        $tag = $this->configPublishTags()[$definition['package']] ?? 'config';
+        $tag = $this->configPublishTags()[$definition['package']] ?? null;
         $class = $definition['class'] ?? null;
-        if ($class) {
+
+        if ($tag !== null) {
+            $this->call('vendor:publish', ['--tag' => $tag]);
+        } elseif ($class) {
             $this->call('vendor:publish', [
                 '--provider' => $class,
-                '--tag' => $tag,
+                '--tag' => 'config',
             ]);
         }
     }
@@ -453,6 +478,34 @@ class StarterInstallCommand extends Command
                 'provider' => \Promethys\Revive\ReviveServiceProvider::class,
                 'migration_glob' => '*_create_recycle_bin_items_table.php',
             ],
+            'filament-settings' => [
+                'label' => 'Spatie Settings',
+                'table' => 'settings',
+                'tag' => 'settings-migrations',
+                'provider' => \Spatie\LaravelSettings\LaravelSettingsServiceProvider::class,
+                'migration_glob' => '*_create_settings_table.php',
+            ],
+            'filament-tags' => [
+                'label' => 'Spatie Tags',
+                'table' => 'tags',
+                'tag' => 'tags-migrations',
+                'provider' => \Spatie\Tags\TagsServiceProvider::class,
+                'migration_glob' => '*_create_tag_tables.php',
+            ],
+            'filament-media-library' => [
+                'label' => 'Spatie Media Library',
+                'table' => 'media',
+                'tag' => 'media-library-migrations',
+                'provider' => \Spatie\MediaLibrary\MediaLibraryServiceProvider::class,
+                'migration_glob' => '*_create_media_table.php',
+            ],
+            'media-manager' => [
+                'label' => 'Media Manager',
+                'table' => 'media_files',
+                'tag' => 'media-manager-migrations',
+                'provider' => null,
+                'migration_glob' => '*_create_media_files_table.php',
+            ],
         ];
     }
 
@@ -463,6 +516,9 @@ class StarterInstallCommand extends Command
     {
         return [
             'tomatophp/filament-users' => 'filament-users-config',
+            'bezhansalleh/filament-language-switch' => 'filament-language-switch-config',
+            'edrisaturay/filament-natural-language-filter' => 'filament-natural-language-filter-config',
+            'slimani/filament-media-manager' => 'media-manager-config',
         ];
     }
 

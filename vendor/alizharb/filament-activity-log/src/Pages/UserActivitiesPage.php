@@ -4,15 +4,19 @@ declare(strict_types=1);
 
 namespace AlizHarb\ActivityLog\Pages;
 
+use AlizHarb\ActivityLog\ActivityLogPlugin;
+use AlizHarb\ActivityLog\Models\Activity;
 use AlizHarb\ActivityLog\Resources\ActivityLogs\ActivityLogResource;
+use AlizHarb\ActivityLog\Support\ActivityLogCauser;
 use Filament\Pages\Page;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
-use Spatie\Activitylog\Models\Activity;
+use UnitEnum;
 
 /**
  * User Activities Page.
@@ -24,9 +28,6 @@ class UserActivitiesPage extends Page implements HasTable
 {
     use InteractsWithTable;
 
-    /**
-     * The view for the page.
-     */
     /**
      * The view for the page.
      */
@@ -44,10 +45,14 @@ class UserActivitiesPage extends Page implements HasTable
     /**
      * Get the navigation group.
      */
-    public static function getNavigationGroup(): ?string
+    public static function getNavigationGroup(): null|string|UnitEnum
     {
-        return config('filament-activity-log.pages.user_activities.navigation_group')
-            ?? config('filament-activity-log.resource.group');
+        try {
+            return ActivityLogPlugin::get()->getNavigationGroup();
+        } catch (\Throwable $e) {
+            return config('filament-activity-log.pages.user_activities.navigation_group')
+                ?? config('filament-activity-log.resource.group');
+        }
     }
 
     /**
@@ -55,7 +60,12 @@ class UserActivitiesPage extends Page implements HasTable
      */
     public static function getNavigationSort(): ?int
     {
-        return config('filament-activity-log.pages.user_activities.navigation_sort') ?? 2;
+        try {
+            return config('filament-activity-log.pages.user_activities.navigation_sort')
+                ?? (ActivityLogPlugin::get()->getNavigationSort() + 1);
+        } catch (\Throwable $e) {
+            return config('filament-activity-log.pages.user_activities.navigation_sort') ?? 2;
+        }
     }
 
     /**
@@ -64,7 +74,7 @@ class UserActivitiesPage extends Page implements HasTable
     public static function getNavigationIcon(): ?string
     {
         return config('filament-activity-log.pages.user_activities.navigation_icon')
-            ?? 'heroicon-o-users';
+            ?? 'heroicon-o-user-circle';
     }
 
     /**
@@ -141,13 +151,16 @@ class UserActivitiesPage extends Page implements HasTable
                 SelectFilter::make('causer_id')
                     ->label(__('filament-activity-log::activity.filter.causer'))
                     ->options(function () {
-                        $model = config('auth.providers.users.model');
+                        $model = ActivityLogCauser::resolveModelClass();
 
-                        if (! class_exists($model)) {
+                        if (! $model || ! class_exists($model)) {
                             return [];
                         }
 
-                        return $model::query()->pluck('name', 'id')->toArray();
+                        /** @var Builder $query */
+                        $query = $model::query();
+
+                        return $query->pluck('name', 'id')->toArray();
                     })
                     ->searchable()
                     ->preload()
@@ -166,7 +179,10 @@ class UserActivitiesPage extends Page implements HasTable
                 SelectFilter::make('subject_type')
                     ->label(__('filament-activity-log::activity.filter.subject_type'))
                     ->options(function () {
-                        return Activity::query()
+                        /** @var Builder $query */
+                        $query = Activity::query();
+
+                        return $query
                             ->whereNotNull('subject_type')
                             ->distinct()
                             ->pluck('subject_type')

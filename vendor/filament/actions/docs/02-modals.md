@@ -87,6 +87,8 @@ Action::make('viewUser')
 
 <UtilityInjection set="actions" version="5.x">As well as allowing a static value, the `schema()` method also accepts a function to dynamically calculate it. You can inject various utilities into the function as parameters.</UtilityInjection>
 
+<AutoScreenshot name="actions/modal/schema" alt="Modal with schema layout" version="5.x" />
+
 #### Rendering a form in a modal
 
 You may use [form field](../forms) to create action modal forms. The data from the form is available in the `$data` array of the `action()` closure:
@@ -160,6 +162,8 @@ Action::make('approvePost')
         $record->approve();
     })
 ```
+
+<AutoScreenshot name="actions/modal/disabled-form" alt="Modal with disabled form fields" version="5.x" />
 
 #### Rendering a wizard in a modal
 
@@ -238,6 +242,8 @@ Action::make('delete')
 
 <UtilityInjection set="actions" version="5.x">The `modalIconColor()` method also accepts a function to dynamically calculate the value. You can inject various utilities into the function as parameters.</UtilityInjection>
 
+<AutoScreenshot name="actions/modal/icon-color" alt="Confirmation modal with custom icon color" version="5.x" />
+
 ### Customizing the alignment of modal content
 
 By default, modal content will be aligned to the start, or centered if the modal is `xs` or `sm` in [width](#changing-the-modal-width). If you wish to change the alignment of content in a modal, you can use the `modalAlignment()` method and pass it `Alignment::Start` or `Alignment::Center`:
@@ -257,6 +263,8 @@ Action::make('updateAuthor')
 ```
 
 <UtilityInjection set="actions" version="5.x">The `modalAlignment()` method also accepts a function to dynamically calculate the value. You can inject various utilities into the function as parameters.</UtilityInjection>
+
+<AutoScreenshot name="actions/modal/alignment" alt="Modal with centered content alignment" version="5.x" />
 
 ### Making the modal header sticky
 
@@ -291,6 +299,8 @@ Action::make('updateAuthor')
     })
     ->stickyModalFooter()
 ```
+
+<AutoScreenshot name="actions/modal/sticky-header" alt="Modal with sticky header and footer" version="5.x" />
 
 ### Custom modal content
 
@@ -389,6 +399,29 @@ Action::make('updateAuthor')
 
 Instead of opening in the center of the screen, the modal content will now slide in from the right and consume the entire height of the browser.
 
+### Changing the slide-over position
+
+By default, slide-overs enter from the end of the screen (the right side in left-to-right languages, the left side in right-to-left languages). You may change this to the start of the screen by passing `SlideOverPosition::Start` to the `slideOverPosition()` method:
+
+```php
+use Filament\Actions\Action;
+use Filament\Support\Enums\SlideOverPosition;
+
+Action::make('updateAuthor')
+    ->schema([
+        // ...
+    ])
+    ->action(function (array $data): void {
+        // ...
+    })
+    ->slideOver()
+    ->slideOverPosition(SlideOverPosition::Start)
+```
+
+<AutoScreenshot name="actions/modal/slide-over-start" alt="Slide over from the start of the screen" version="5.x" />
+
+This is useful when the action trigger sits near the start of the viewport — for example, a row action at the beginning of a table row — so the slide-over opens adjacent to its trigger instead of across the screen.
+
 ## Changing the modal width
 
 You can change the width of the modal by using the `modalWidth()` method. Options correspond to [Tailwind's max-width scale](https://tailwindcss.com/docs/max-width). The options are `ExtraSmall`, `Small`, `Medium`, `Large`, `ExtraLarge`, `TwoExtraLarge`, `ThreeExtraLarge`, `FourExtraLarge`, `FiveExtraLarge`, `SixExtraLarge`, `SevenExtraLarge`, and `Screen`:
@@ -408,6 +441,8 @@ Action::make('updateAuthor')
 ```
 
 <UtilityInjection set="actions" version="5.x">The `modalWidth()` method also accepts a function to dynamically calculate the value. You can inject various utilities into the function as parameters.</UtilityInjection>
+
+<AutoScreenshot name="actions/modal/wide" alt="Modal with custom width" version="5.x" />
 
 ## Executing code when the modal opens
 
@@ -479,6 +514,8 @@ Action::make('create')
 ```
 
 <UtilityInjection set="actions" version="5.x">The `extraModalFooterActions()` method also accepts a function to dynamically calculate the value. You can inject various utilities into the function as parameters.</UtilityInjection>
+
+<AutoScreenshot name="actions/modal/extra-footer-actions" alt="Modal with extra footer action buttons" version="5.x" />
 
 `$action->makeModalSubmitAction()` returns an action instance that can be customized using the [methods available to customize trigger buttons](overview).
 
@@ -733,6 +770,8 @@ use Filament\Support\View\Components\ModalComponent;
 ModalComponent::closeButton(false);
 ```
 
+<AutoScreenshot name="actions/modal/no-close-button" alt="Modal without a close button" version="5.x" />
+
 ## Preventing the modal from autofocusing
 
 By default, modals will autofocus on the first focusable element when opened. If you wish to disable this behavior, you can use the `modalAutofocus(false)` method:
@@ -759,6 +798,36 @@ use Filament\Support\View\Components\ModalComponent;
 
 ModalComponent::autofocus(false);
 ```
+
+## Overlaying child action modals on top of parent action modals
+
+By default, when a child action opens its modal, the parent action's modal is temporarily closed and then reopened after the child action is dismissed. If you'd like the child action's modal to instead appear on top of the parent action's modal (keeping the parent visible underneath), you can use the `overlayParentActions()` method on the child action:
+
+```php
+use Filament\Actions\Action;
+use Filament\Schemas\Components\Repeater;
+
+Action::make('editItems')
+    ->slideOver()
+    ->schema([
+        Repeater::make('items')
+            ->schema([
+                // ...
+            ])
+            ->deleteAction(
+                fn (Action $action) => $action
+                    ->requiresConfirmation()
+                    ->overlayParentActions(),
+            ),
+    ])
+    ->action(function () {
+        // ...
+    })
+```
+
+In this example, when the user clicks the delete button on a repeater item, the confirmation dialog appears on top of the slide-over instead of the slide-over closing first. This creates a smoother experience, especially for actions inside slide-overs or complex forms where closing and reopening the parent would be disorienting.
+
+<AutoScreenshot name="actions/modal/overlaying-child" alt="Child confirmation modal overlaying a parent slide-over" version="5.x" />
 
 ## Optimizing modal configuration methods
 
@@ -805,4 +874,22 @@ Action::make('updateAuthor')
 
 <Aside variant="tip">
     By default, calling `extraModalWindowAttributes()` multiple times will overwrite the previous attributes. If you wish to merge the attributes instead, you can pass `merge: true` to the method.
+</Aside>
+
+
+## Adding extra attributes to the modal overlay
+
+You can pass extra HTML attributes to the modal overlay via the `extraModalOverlayAttributes()`. The attributes should be represented by an array, where the key is the attribute name and the value is the attribute value:
+
+```php
+use Filament\Actions\Action;
+
+Action::make('updateAuthor')
+    ->extraModalOverlayAttributes(['class' => 'update-author-overlay'])
+```
+
+<UtilityInjection set="actions" version="5.x">As well as allowing a static value, the `extraModalOverlayAttributes()` method also accepts a function to dynamically calculate it. You can inject various utilities into the function as parameters.</UtilityInjection>
+
+<Aside variant="tip">
+    By default, calling `extraModalOverlayAttributes()` multiple times will overwrite the previous attributes. If you wish to merge the attributes instead, you can pass <code>merge: true</code> to the method.
 </Aside>

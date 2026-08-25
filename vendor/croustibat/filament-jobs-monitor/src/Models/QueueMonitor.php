@@ -3,17 +3,24 @@
 namespace Croustibat\FilamentJobsMonitor\Models;
 
 use Croustibat\FilamentJobsMonitor\FilamentJobsMonitorPlugin;
+use Filament\Facades\Filament;
 use Illuminate\Contracts\Queue\Job as JobContract;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Prunable;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Hash;
 
 class QueueMonitor extends Model
 {
     use HasFactory, Prunable;
+
+    public function getConnectionName()
+    {
+        return config('filament-jobs-monitor.connection') ?? parent::getConnectionName();
+    }
 
     protected $fillable = [
         'job_id',
@@ -25,6 +32,7 @@ class QueueMonitor extends Model
         'attempt',
         'progress',
         'exception_message',
+        'tenant_id',
     ];
 
     protected $casts = [
@@ -32,6 +40,44 @@ class QueueMonitor extends Model
         'started_at' => 'datetime',
         'finished_at' => 'datetime',
     ];
+
+    protected static function booted(): void
+    {
+        static::addGlobalScope('tenant', function (Builder $query) {
+            if (! config('filament-jobs-monitor.tenancy.enabled')) {
+                return;
+            }
+
+            if (! class_exists(Filament::class)) {
+                return;
+            }
+
+            if (! app()->bound('filament')) {
+                return;
+            }
+
+            $tenant = Filament::getTenant();
+
+            if ($tenant) {
+                $column = config('filament-jobs-monitor.tenancy.column', 'tenant_id');
+                $query->where($column, $tenant->getKey());
+            }
+        });
+    }
+
+    /*
+     *--------------------------------------------------------------------------
+     * Relationships
+     *--------------------------------------------------------------------------
+     */
+
+    public function tenant(): BelongsTo
+    {
+        $model = config('filament-jobs-monitor.tenancy.model');
+        $column = config('filament-jobs-monitor.tenancy.column', 'tenant_id');
+
+        return $this->belongsTo($model, $column);
+    }
 
     /*
      *--------------------------------------------------------------------------
@@ -97,7 +143,7 @@ class QueueMonitor extends Model
     /**
      * Get the prunable model query.
      *
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @return Builder
      */
     public function prunable(): Builder|bool
     {

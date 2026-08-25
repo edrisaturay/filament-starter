@@ -4,7 +4,6 @@ namespace Spatie\Backup\Tasks\Backup;
 
 use Generator;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Str;
 use Symfony\Component\Finder\Finder;
 
 class FileSelection
@@ -78,11 +77,13 @@ class FileSelection
             yield $includedFile;
         }
 
-        if ($this->includedDirectories() === []) {
+        $directories = $this->includedDirectories();
+
+        if ($directories === []) {
             return [];
         }
 
-        $finder->in($this->includedDirectories());
+        $finder->in($directories);
 
         foreach ($finder->getIterator() as $file) {
             if ($this->shouldExclude($file)) {
@@ -106,7 +107,20 @@ class FileSelection
     {
         return $this
             ->includeFilesAndDirectories
-            ->reject(fn (string $path) => is_file($path))->toArray();
+            ->filter(function (string $path) {
+                if (is_file($path)) {
+                    return false;
+                }
+
+                if (! file_exists($path)) {
+                    backupLogger()->warn("Include path `{$path}` does not exist, skipping.");
+
+                    return false;
+                }
+
+                return true;
+            })
+            ->toArray();
     }
 
     protected function shouldExclude(string $path): bool
@@ -117,8 +131,8 @@ class FileSelection
         }
 
         foreach ($this->excludeFilesAndDirectories as $excludedPath) {
-            if (Str::startsWith($path, $excludedPath.(is_dir($excludedPath) ? DIRECTORY_SEPARATOR : ''))) {
-                if ($path != $excludedPath && is_file($excludedPath)) {
+            if (str_starts_with($path, $excludedPath.(is_dir($excludedPath) ? DIRECTORY_SEPARATOR : ''))) {
+                if ($path !== $excludedPath && is_file($excludedPath)) {
                     continue;
                 }
 

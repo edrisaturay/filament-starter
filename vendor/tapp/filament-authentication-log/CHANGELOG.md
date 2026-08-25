@@ -2,6 +2,22 @@
 
 All notable changes to the "Filament Authentication Log" will be documented in this file.
 
+## v5.0.4 - 2026-02-02
+
+### What's Changed
+
+* Add Portuguese (pt_BR) translations for Filament Authentication Log by @samuelterra22 in https://github.com/TappNetwork/filament-authentication-log/pull/45
+
+**Full Changelog**: https://github.com/TappNetwork/filament-authentication-log/compare/v5.0.3...v5.0.4
+
+## v5.0.3 - 2026-01-21
+
+### What's Changed
+
+* Add Laravel Authentication log v6 support by @andreia in https://github.com/TappNetwork/filament-authentication-log/pull/44
+
+**Full Changelog**: https://github.com/TappNetwork/filament-authentication-log/compare/v5.0.2...v5.0.3
+
 ## v4.0.2 - 2025-04-27
 
 ### What's Changed

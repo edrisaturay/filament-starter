@@ -6,6 +6,7 @@
     use Filament\Tables\Actions\HeaderActionsPosition;
     use Filament\Tables\Columns\Column;
     use Filament\Tables\Columns\ColumnGroup;
+    use Filament\Tables\Enums\ColumnManagerLayout;
     use Filament\Tables\Enums\ColumnManagerResetActionPosition;
     use Filament\Tables\Enums\FiltersLayout;
     use Filament\Tables\Enums\FiltersResetActionPosition;
@@ -44,7 +45,8 @@
     $hasColumnsLayout = $hasColumnsLayout();
     $hasPageSummary = $hasPageSummary();
     $hasAllTableSummary = $hasAllTableSummary();
-    $hasSummary = ($hasPageSummary || $hasAllTableSummary) && $hasSummary($this->getAllTableSummaryQuery());
+    $hasSummary = $hasSummary($this->getAllTableSummaryQuery());
+    $hasTopLevelSummary = $hasSummary && ($hasPageSummary || $hasAllTableSummary);
     $header = $getHeader();
     $headerActions = array_filter(
         $getHeaderActions(),
@@ -99,6 +101,7 @@
     $selectsGroupsOnly = $selectsGroupsOnly();
     $recordCheckboxPosition = $getRecordCheckboxPosition();
     $isStriped = $isStriped();
+    $isStackedOnMobile = $isStackedOnMobile();
     $isLoaded = $isLoaded();
     $hasFilters = $isFilterable();
     $filtersLayout = $getFiltersLayout();
@@ -111,18 +114,27 @@
     $hasCollapsibleFilters = $hasFilters && in_array($filtersLayout, [FiltersLayout::AboveContentCollapsible, FiltersLayout::BeforeContentCollapsible, FiltersLayout::AfterContentCollapsible]);
     $hasFiltersTrigger = $hasFilters && ($hasFiltersDialog || $hasFiltersBeforeContent || $hasFiltersAfterContent);
     $filtersFormMaxHeight = $getFiltersFormMaxHeight();
-    $hasColumnManagerDropdown = $hasColumnManager();
+    $hasColumnManager = $hasColumnManager();
+    $columnManagerLayout = $getColumnManagerLayout();
     $hasReorderableColumns = $hasReorderableColumns();
     $hasToggleableColumns = $hasToggleableColumns();
     $columnManagerApplyAction = $getColumnManagerApplyAction();
     $columnManagerTriggerAction = $getColumnManagerTriggerAction();
-    $hasHeader = $header || $heading || $description || ($headerActions && (! $isReordering)) || $isReorderable || $areGroupingSettingsVisible || $isGlobalSearchVisible || $hasFilters || count($filterIndicators) || $hasColumnManagerDropdown;
-    $hasHeaderToolbar = $isReorderable || $areGroupingSettingsVisible || $isGlobalSearchVisible || $hasFiltersTrigger || $hasColumnManagerDropdown;
+    $hasHeader = $header || $heading || $description || ($headerActions && (! $isReordering)) || $isReorderable || $areGroupingSettingsVisible || $isGlobalSearchVisible || $hasFilters || count($filterIndicators) || $hasColumnManager;
+    $hasHeaderToolbar = $isReorderable || $areGroupingSettingsVisible || $isGlobalSearchVisible || $hasFiltersTrigger || $hasColumnManager;
+
+    // https://github.com/filamentphp/filament/pull/19787
+    $headerVisibilityMode = ($hasHeader || $hasNonBulkToolbarAction)
+        ? 'visible'
+        : (count($toolbarActions) ? 'selection' : 'hidden');
+    $headerToolbarVisibilityMode = ($hasHeaderToolbar || $hasNonBulkToolbarAction)
+        ? 'visible'
+        : (count($toolbarActions) ? 'selection' : 'hidden');
     $headingTag = $getHeadingTag();
     $secondLevelHeadingTag = $heading ? $getHeadingTag(1) : $headingTag;
     $pluralModelLabel = $getPluralModelLabel();
     $records = $isLoaded ? $getRecords() : null;
-    $hasPagination = (($records instanceof \Illuminate\Contracts\Pagination\Paginator) || ($records instanceof \Illuminate\Contracts\Pagination\CursorPaginator)) && ((! ($records instanceof \Illuminate\Contracts\Pagination\LengthAwarePaginator)) || $records->total());
+    $hasPagination = (($records instanceof \Illuminate\Contracts\Pagination\Paginator) || ($records instanceof \Illuminate\Contracts\Pagination\CursorPaginator)) && (($records instanceof \Illuminate\Contracts\Pagination\LengthAwarePaginator) ? $records->total() : $records->isNotEmpty());
     $hasEmptyState = ($records !== null) && ! count($records);
     $hasContentLayout = $content || $hasColumnsLayout;
     $searchDebounce = $getSearchDebounce();
@@ -185,6 +197,7 @@
     >
         @if ($hasFiltersBeforeContent)
             <div
+                wire:ignore.self
                 x-ref="filtersContentContainer"
                 x-transition:enter-start="fi-opacity-0"
                 x-transition:leave-end="fi-opacity-0"
@@ -209,6 +222,7 @@
             <div
                 @if (! $hasHeader) x-cloak @endif
                 x-show="@js($hasHeader) || @js($hasNonBulkToolbarAction) || (getSelectedRecordsCount() && @js(count($toolbarActions)))"
+                wire:key="{{ $this->getId() }}.table.header.{{ $headerVisibilityMode }}"
                 class="fi-ta-header-ctn"
             >
                 {{ FilamentView::renderHook(TablesRenderHook::HEADER_BEFORE, scopes: static::class) }}
@@ -288,6 +302,7 @@
                 <div
                     @if (! $hasHeaderToolbar) x-cloak @endif
                     x-show="@js($hasHeaderToolbar) || @js($hasNonBulkToolbarAction) || (getSelectedRecordsCount() && @js(count($toolbarActions)))"
+                    wire:key="{{ $this->getId() }}.table.header-toolbar.{{ $headerToolbarVisibilityMode }}"
                     class="fi-ta-header-toolbar"
                 >
                     {{ FilamentView::renderHook(TablesRenderHook::TOOLBAR_START, scopes: static::class) }}
@@ -471,7 +486,7 @@
                         {{ FilamentView::renderHook(TablesRenderHook::TOOLBAR_GROUPING_SELECTOR_AFTER, scopes: static::class) }}
                     </div>
 
-                    @if ($isGlobalSearchVisible || $hasFiltersTrigger || $hasColumnManagerDropdown)
+                    @if ($isGlobalSearchVisible || $hasFiltersTrigger || $hasColumnManager)
                         <div>
                             {{ FilamentView::renderHook(TablesRenderHook::TOOLBAR_SEARCH_BEFORE, scopes: static::class) }}
 
@@ -489,7 +504,7 @@
 
                             {{ FilamentView::renderHook(TablesRenderHook::TOOLBAR_SEARCH_AFTER, scopes: static::class) }}
 
-                            @if ($hasFiltersTrigger || $hasColumnManagerDropdown)
+                            @if ($hasFiltersTrigger || $hasColumnManager)
                                 @if ($hasFiltersDialog)
                                     @if (($filtersLayout === FiltersLayout::Modal) || $filtersTriggerAction->isModalSlideOver())
                                         @php
@@ -499,12 +514,15 @@
                                             $filtersTriggerActionIsModalClosedByClickingAway = $filtersTriggerAction->isModalClosedByClickingAway();
                                             $filtersTriggerActionIsModalClosedByEscaping = $filtersTriggerAction->isModalClosedByEscaping();
                                             $filtersTriggerActionModalDescription = $filtersTriggerAction->getModalDescription();
+                                            $filtersTriggerActionExtraModalWindowAttributeBag = $filtersTriggerAction->getExtraModalWindowAttributeBag();
+                                            $filtersTriggerActionExtraModalOverlayAttributeBag = $filtersTriggerAction->getExtraModalOverlayAttributeBag();
                                             $filtersTriggerActionVisibleModalFooterActions = $filtersTriggerAction->getVisibleModalFooterActions();
                                             $filtersTriggerActionModalFooterActionsAlignment = $filtersTriggerAction->getModalFooterActionsAlignment();
                                             $filtersTriggerActionModalHeading = $filtersTriggerAction->getCustomModalHeading() ?? __('filament-tables::table.filters.heading');
                                             $filtersTriggerActionModalIcon = $filtersTriggerAction->getModalIcon();
                                             $filtersTriggerActionModalIconColor = $filtersTriggerAction->getModalIconColor();
                                             $filtersTriggerActionIsModalSlideOver = $filtersTriggerAction->isModalSlideOver();
+                                            $filtersTriggerActionModalSlideOverPosition = $filtersTriggerAction->getModalSlideOverPosition();
                                             $filtersTriggerActionIsModalFooterSticky = $filtersTriggerAction->isModalFooterSticky();
                                             $filtersTriggerActionIsModalHeaderSticky = $filtersTriggerAction->isModalHeaderSticky();
                                         @endphp
@@ -516,12 +534,15 @@
                                             :close-by-clicking-away="$filtersTriggerActionIsModalClosedByClickingAway"
                                             :close-by-escaping="$filtersTriggerActionIsModalClosedByEscaping"
                                             :description="$filtersTriggerActionModalDescription"
+                                            :extra-modal-window-attribute-bag="$filtersTriggerActionExtraModalWindowAttributeBag"
+                                            :extra-modal-overlay-attribute-bag="$filtersTriggerActionExtraModalOverlayAttributeBag"
                                             :footer-actions="$filtersTriggerActionVisibleModalFooterActions"
                                             :footer-actions-alignment="$filtersTriggerActionModalFooterActionsAlignment"
                                             :heading="$filtersTriggerActionModalHeading"
                                             :icon="$filtersTriggerActionModalIcon"
                                             :icon-color="$filtersTriggerActionModalIconColor"
                                             :slide-over="$filtersTriggerActionIsModalSlideOver"
+                                            :slide-over-position="$filtersTriggerActionModalSlideOverPosition"
                                             :sticky-footer="$filtersTriggerActionIsModalFooterSticky"
                                             :sticky-header="$filtersTriggerActionIsModalHeaderSticky"
                                             :width="$filtersFormWidth"
@@ -575,36 +596,106 @@
 
                                 {{ FilamentView::renderHook(TablesRenderHook::TOOLBAR_COLUMN_MANAGER_TRIGGER_BEFORE, scopes: static::class) }}
 
-                                @if ($hasColumnManagerDropdown)
+                                @if ($hasColumnManager)
                                     @php
                                         $columnManagerMaxHeight = $getColumnManagerMaxHeight();
                                         $columnManagerWidth = $getColumnManagerWidth();
                                         $columnManagerColumns = $getColumnManagerColumns();
                                     @endphp
 
-                                    <x-filament::dropdown
-                                        :max-height="$columnManagerMaxHeight"
-                                        placement="bottom-end"
-                                        shift
-                                        :flip="false"
-                                        :width="$columnManagerWidth"
-                                        :wire:key="$this->getId() . '.table.column-manager'"
-                                        class="fi-ta-col-manager-dropdown"
-                                    >
-                                        <x-slot name="trigger">
-                                            {{ $columnManagerTriggerAction }}
-                                        </x-slot>
+                                    @if (($columnManagerLayout === ColumnManagerLayout::Modal) || $columnManagerTriggerAction->isModalSlideOver())
+                                        @php
+                                            $columnManagerTriggerActionModalAlignment = $columnManagerTriggerAction->getModalAlignment();
+                                            $columnManagerTriggerActionIsModalAutofocused = $columnManagerTriggerAction->isModalAutofocused();
+                                            $columnManagerTriggerActionHasModalCloseButton = $columnManagerTriggerAction->hasModalCloseButton();
+                                            $columnManagerTriggerActionIsModalClosedByClickingAway = $columnManagerTriggerAction->isModalClosedByClickingAway();
+                                            $columnManagerTriggerActionIsModalClosedByEscaping = $columnManagerTriggerAction->isModalClosedByEscaping();
+                                            $columnManagerTriggerActionModalDescription = $columnManagerTriggerAction->getModalDescription();
+                                            $columnManagerTriggerActionExtraModalWindowAttributeBag = $columnManagerTriggerAction->getExtraModalWindowAttributeBag();
+                                            $columnManagerTriggerActionExtraModalOverlayAttributeBag = $columnManagerTriggerAction->getExtraModalOverlayAttributeBag();
+                                            $columnManagerTriggerActionVisibleModalFooterActions = $columnManagerTriggerAction->getVisibleModalFooterActions();
+                                            $columnManagerTriggerActionModalFooterActionsAlignment = $columnManagerTriggerAction->getModalFooterActionsAlignment();
+                                            $columnManagerTriggerActionModalHeading = $columnManagerTriggerAction->getCustomModalHeading() ?? __('filament-tables::table.column_manager.heading');
+                                            $columnManagerTriggerActionModalIcon = $columnManagerTriggerAction->getModalIcon();
+                                            $columnManagerTriggerActionModalIconColor = $columnManagerTriggerAction->getModalIconColor();
+                                            $columnManagerTriggerActionIsModalSlideOver = $columnManagerTriggerAction->isModalSlideOver();
+                                            $columnManagerTriggerActionModalSlideOverPosition = $columnManagerTriggerAction->getModalSlideOverPosition();
+                                            $columnManagerTriggerActionIsModalFooterSticky = $columnManagerTriggerAction->isModalFooterSticky();
+                                            $columnManagerTriggerActionIsModalHeaderSticky = $columnManagerTriggerAction->isModalHeaderSticky();
+                                        @endphp
 
-                                        <x-filament-tables::column-manager
-                                            :apply-action="$columnManagerApplyAction"
-                                            :columns="$columnManagerColumns"
-                                            :reset-action-position="$columnManagerResetActionPosition"
-                                            :has-reorderable-columns="$hasReorderableColumns"
-                                            :has-toggleable-columns="$hasToggleableColumns"
-                                            :heading-tag="$secondLevelHeadingTag"
-                                            :reorder-animation-duration="$getReorderAnimationDuration()"
-                                        />
-                                    </x-filament::dropdown>
+                                        <x-filament::modal
+                                            :alignment="$columnManagerTriggerActionModalAlignment"
+                                            :autofocus="$columnManagerTriggerActionIsModalAutofocused"
+                                            :close-button="$columnManagerTriggerActionHasModalCloseButton"
+                                            :close-by-clicking-away="$columnManagerTriggerActionIsModalClosedByClickingAway"
+                                            :close-by-escaping="$columnManagerTriggerActionIsModalClosedByEscaping"
+                                            :description="$columnManagerTriggerActionModalDescription"
+                                            :extra-modal-window-attribute-bag="$columnManagerTriggerActionExtraModalWindowAttributeBag"
+                                            :extra-modal-overlay-attribute-bag="$columnManagerTriggerActionExtraModalOverlayAttributeBag"
+                                            :footer-actions="$columnManagerTriggerActionVisibleModalFooterActions"
+                                            :footer-actions-alignment="$columnManagerTriggerActionModalFooterActionsAlignment"
+                                            :heading="$columnManagerTriggerActionModalHeading"
+                                            :icon="$columnManagerTriggerActionModalIcon"
+                                            :icon-color="$columnManagerTriggerActionModalIconColor"
+                                            :slide-over="$columnManagerTriggerActionIsModalSlideOver"
+                                            :slide-over-position="$columnManagerTriggerActionModalSlideOverPosition"
+                                            :sticky-footer="$columnManagerTriggerActionIsModalFooterSticky"
+                                            :sticky-header="$columnManagerTriggerActionIsModalHeaderSticky"
+                                            :width="$columnManagerWidth"
+                                            :wire:key="$this->getId() . '.table.column-manager'"
+                                            class="fi-ta-col-manager-modal"
+                                        >
+                                            <x-slot name="trigger">
+                                                {{ $columnManagerTriggerAction }}
+                                            </x-slot>
+
+                                            {{ $columnManagerTriggerAction->getModalContent() }}
+
+                                            <div
+                                                x-data="filamentTableColumnManager({
+                                                            columns: $wire.entangle('tableColumns'),
+                                                            isLive: {{ $columnManagerApplyAction->isVisible() ? 'false' : 'true' }},
+                                                        })"
+                                                x-on:apply-table-column-manager.window="applyTableColumnManager()"
+                                                x-on:reset-table-column-manager.window="resetDeferredColumns()"
+                                                class="fi-ta-col-manager"
+                                            >
+                                                <x-filament-tables::column-manager.content
+                                                    :columns="$columnManagerColumns"
+                                                    :has-reorderable-columns="$hasReorderableColumns"
+                                                    :has-toggleable-columns="$hasToggleableColumns"
+                                                    :reorder-animation-duration="$getReorderAnimationDuration()"
+                                                />
+                                            </div>
+
+                                            {{ $columnManagerTriggerAction->getModalContentFooter() }}
+                                        </x-filament::modal>
+                                    @else
+                                        <x-filament::dropdown
+                                            :max-height="$columnManagerMaxHeight"
+                                            placement="bottom-end"
+                                            shift
+                                            :flip="false"
+                                            :width="$columnManagerWidth"
+                                            :wire:key="$this->getId() . '.table.column-manager'"
+                                            class="fi-ta-col-manager-dropdown"
+                                        >
+                                            <x-slot name="trigger">
+                                                {{ $columnManagerTriggerAction }}
+                                            </x-slot>
+
+                                            <x-filament-tables::column-manager
+                                                :apply-action="$columnManagerApplyAction"
+                                                :columns="$columnManagerColumns"
+                                                :reset-action-position="$columnManagerResetActionPosition"
+                                                :has-reorderable-columns="$hasReorderableColumns"
+                                                :has-toggleable-columns="$hasToggleableColumns"
+                                                :heading-tag="$secondLevelHeadingTag"
+                                                :reorder-animation-duration="$getReorderAnimationDuration()"
+                                            />
+                                        </x-filament::dropdown>
+                                    @endif
                                 @endif
 
                                 {{ FilamentView::renderHook(TablesRenderHook::TOOLBAR_COLUMN_MANAGER_TRIGGER_AFTER, scopes: static::class) }}
@@ -730,19 +821,7 @@
                         </div>
 
                         @if (collect($filterIndicators)->contains(fn (\Filament\Tables\Filters\Indicator $indicator): bool => $indicator->isRemovable()))
-                            <button
-                                type="button"
-                                x-tooltip="{
-                                    content: @js(__('filament-tables::table.filters.actions.remove_all.tooltip')),
-                                    theme: $store.theme,
-                                }"
-                                wire:click="removeTableFilters"
-                                wire:loading.attr="disabled"
-                                wire:target="removeTableFilters,removeTableFilter"
-                                class="fi-icon-btn fi-size-sm"
-                            >
-                                {{ \Filament\Support\generate_icon_html(\Filament\Support\Icons\Heroicon::XMark, alias: \Filament\Tables\View\TablesIconAlias::FILTERS_REMOVE_ALL_BUTTON, size: \Filament\Support\Enums\IconSize::Small) }}
-                            </button>
+                            {{ $getFiltersRemoveAllAction() }}
                         @endif
                     </div>
                 @endif
@@ -1232,7 +1311,7 @@
                                     @endphp
                                 @endforeach
 
-                                @if ($hasSummary && (! $isReordering) && filled($previousRecordGroupTitle) && ((! $records instanceof \Illuminate\Contracts\Pagination\Paginator) || (! $records->hasMorePages())))
+                                @if ($hasSummary && (! $isReordering) && filled($previousRecordGroupTitle) && $this->shouldRenderTrailingGroupedTableSummary($previousRecord))
                                     <table class="fi-ta-table">
                                         <tbody>
                                             @php
@@ -1262,7 +1341,7 @@
                             }}
                         @endif
 
-                        @if ($hasSummary && (! $isReordering))
+                        @if ($hasTopLevelSummary && (! $isReordering))
                             <table class="fi-ta-table">
                                 <tbody>
                                     <x-filament-tables::summary
@@ -1278,8 +1357,165 @@
                             </table>
                         @endif
                     @elseif ((! ($content || $hasColumnsLayout)) && ($records !== null))
-                        <table class="fi-ta-table">
+                        @php
+                            $sortableColumns = $isStackedOnMobile ? array_filter(
+                                $columns,
+                                fn (\Filament\Tables\Columns\Column $column): bool => $column->isSortable(),
+                            ) : [];
+                        @endphp
+
+                        <table
+                            @class([
+                                'fi-ta-table',
+                                'fi-ta-table-stacked-on-mobile' => $isStackedOnMobile,
+                            ])
+                        >
                             <thead>
+                                @if ($isStackedOnMobile && (count($sortableColumns) || ($isSelectionEnabled && ($maxSelectableRecords !== 1) && (! $selectsGroupsOnly))) && (! $isReordering))
+                                    <tr class="fi-ta-table-stacked-header-row">
+                                        <th
+                                            colspan="100%"
+                                            class="fi-ta-table-stacked-header-cell"
+                                        >
+                                            @if (count($sortableColumns))
+                                                <div
+                                                    x-data="{
+                                                        sort: $wire.$entangle('tableSort', true),
+                                                        column: null,
+                                                        direction: null,
+                                                    }"
+                                                    x-init="
+                                                        if (sort) {
+                                                            ;[column, direction] = sort.split(':')
+                                                            direction ??= 'asc'
+                                                        }
+
+                                                        $watch('sort', function () {
+                                                            if (! sort) {
+                                                                return
+                                                            }
+
+                                                            ;[column, direction] = sort.split(':')
+                                                            direction ??= 'asc'
+                                                        })
+
+                                                        $watch('direction', function () {
+                                                            sort = column ? `${column}:${direction}` : null
+                                                        })
+
+                                                        $watch('column', function (newColumn, oldColumn) {
+                                                            if (! newColumn) {
+                                                                direction = null
+                                                                sort = column ? `${column}:${direction}` : null
+
+                                                                return
+                                                            }
+
+                                                            if (oldColumn) {
+                                                                sort = column ? `${column}:${direction}` : null
+
+                                                                return
+                                                            }
+
+                                                            direction = 'asc'
+                                                            sort = column ? `${column}:${direction}` : null
+                                                        })
+                                                    "
+                                                    class="fi-ta-table-stacked-sorting"
+                                                >
+                                                    <label>
+                                                        <x-filament::input.wrapper
+                                                            :prefix="__('filament-tables::table.sorting.fields.column.label')"
+                                                        >
+                                                            <x-filament::input.select
+                                                                x-model="column"
+                                                            >
+                                                                <option
+                                                                    value=""
+                                                                >
+                                                                    {{ $defaultSortOptionLabel }}
+                                                                </option>
+
+                                                                @foreach ($sortableColumns as $sortableColumn)
+                                                                    <option
+                                                                        value="{{ $sortableColumn->getName() }}"
+                                                                    >
+                                                                        {{ $sortableColumn->getLabel() }}
+                                                                    </option>
+                                                                @endforeach
+                                                            </x-filament::input.select>
+                                                        </x-filament::input.wrapper>
+                                                    </label>
+
+                                                    <label
+                                                        x-cloak
+                                                        x-show="column"
+                                                    >
+                                                        <span
+                                                            class="fi-sr-only"
+                                                        >
+                                                            {{ __('filament-tables::table.sorting.fields.direction.label') }}
+                                                        </span>
+
+                                                        <x-filament::input.wrapper>
+                                                            <x-filament::input.select
+                                                                x-model="direction"
+                                                            >
+                                                                <option
+                                                                    value="asc"
+                                                                >
+                                                                    {{ __('filament-tables::table.sorting.fields.direction.options.asc') }}
+                                                                </option>
+
+                                                                <option
+                                                                    value="desc"
+                                                                >
+                                                                    {{ __('filament-tables::table.sorting.fields.direction.options.desc') }}
+                                                                </option>
+                                                            </x-filament::input.select>
+                                                        </x-filament::input.wrapper>
+                                                    </label>
+                                                </div>
+                                            @endif
+
+                                            @if ($isSelectionEnabled && ($maxSelectableRecords !== 1) && (! $selectsGroupsOnly))
+                                                <input
+                                                    aria-label="{{ __('filament-tables::table.fields.bulk_select_page.label') }}"
+                                                    type="checkbox"
+                                                    @if ($isSelectionDisabled)
+                                                        disabled
+                                                    @elseif ($maxSelectableRecords)
+                                                        x-bind:disabled="
+                                                            const recordsOnPage = getRecordsOnPage()
+
+                                                            return recordsOnPage.length && ! areRecordsToggleable(recordsOnPage)
+                                                        "
+                                                    @endif
+                                                    x-bind:checked="
+                                                        const recordsOnPage = getRecordsOnPage()
+
+                                                        if (recordsOnPage.length && areRecordsSelected(recordsOnPage)) {
+                                                            $el.checked = true
+
+                                                            return 'checked'
+                                                        }
+
+                                                        $el.checked = false
+
+                                                        return null
+                                                    "
+                                                    x-on:click="toggleSelectRecordsOnPage"
+                                                    {{-- Make sure the "checked" state gets re-evaluated after a Livewire request: --}}
+                                                    wire:key="{{ $this->getId() }}.table.bulk-select-page.checkbox.stacked.{{ \Illuminate\Support\Str::random() }}"
+                                                    wire:loading.attr="disabled"
+                                                    wire:target="{{ implode(',', \Filament\Tables\Table::LOADING_TARGETS) }}"
+                                                    class="fi-ta-page-checkbox fi-checkbox-input"
+                                                />
+                                            @endif
+                                        </th>
+                                    </tr>
+                                @endif
+
                                 @if ($hasColumnGroups)
                                     <tr class="fi-ta-table-head-groups-row">
                                         @if (count($records))
@@ -1491,7 +1727,17 @@
                                                                 $isColumnActivelySorted && ($sortDirection === 'asc') => \Filament\Tables\View\TablesIconAlias::HEADER_CELL_SORT_ASC_BUTTON,
                                                                 $isColumnActivelySorted && ($sortDirection === 'desc') => \Filament\Tables\View\TablesIconAlias::HEADER_CELL_SORT_DESC_BUTTON,
                                                                 default => \Filament\Tables\View\TablesIconAlias::HEADER_CELL_SORT_BUTTON,
-                                                            })
+                                                            }, attributes: (new \Illuminate\View\ComponentAttributeBag([
+                                                                'wire:loading.remove.delay.' . config('filament.livewire_loading_delay', 'default') => true,
+                                                                'wire:target' => "sortTable('{$columnName}')",
+                                                            ])))
+                                                        }}
+
+                                                        {{
+                                                            \Filament\Support\generate_loading_indicator_html(new \Illuminate\View\ComponentAttributeBag([
+                                                                'wire:loading.delay.' . config('filament.livewire_loading_delay', 'default') => '',
+                                                                'wire:target' => "sortTable('{$columnName}')",
+                                                            ]))
                                                         }}
                                                     </span>
                                                 @else
@@ -2016,6 +2262,7 @@
                                                                 ])
                                                             }}
                                                         >
+                                                            {!! $isStackedOnMobile ? '<div class="fi-ta-cell-label">' . e($column->getLabel()) . '</div><div class="fi-ta-cell-content">' : '' !!}
                                                             <{{ $columnWrapperTag }}
                                                                 @if ($columnWrapperTag === 'a')
                                                                     {{ \Filament\Support\generate_href_html($columnUrl ?: $recordUrl, $columnUrl ? $column->shouldOpenUrlInNewTab() : $openRecordUrlInNewTab, hasNestedClickEventHandler: true) }}
@@ -2035,6 +2282,7 @@
                                                             >
                                                                 {{ $column }}
                                                             </{{ $columnWrapperTag }}>
+                                                            {!! $isStackedOnMobile ? '</div>' : '' !!}
                                                         </td>
                                                     @endforeach
 
@@ -2115,7 +2363,7 @@
                                             @endphp
                                         @endforeach
 
-                                        @if ($hasSummary && (! $isReordering) && filled($previousRecordGroupTitle) && ((! $records instanceof \Illuminate\Contracts\Pagination\Paginator) || (! $records->hasMorePages())))
+                                        @if ($hasSummary && (! $isReordering) && filled($previousRecordGroupTitle) && $this->shouldRenderTrailingGroupedTableSummary($previousRecord))
                                             @php
                                                 $groupColumn = $group->getColumn();
                                                 $groupScopedAllTableSummaryQuery = $group->scopeQuery($this->getAllTableSummaryQuery(), $previousRecord);
@@ -2244,6 +2492,7 @@
 
         @if ($hasFiltersAfterContent)
             <div
+                wire:ignore.self
                 x-ref="filtersContentContainer"
                 x-transition:enter-start="fi-opacity-0"
                 x-transition:leave-end="fi-opacity-0"

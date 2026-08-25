@@ -6,6 +6,26 @@ All notable changes to `php-structure-discoverer` will be documented in this fil
 
 - Added support for using Reflection instead of PHP token parsing to discover structures
 
+## 2.4.1 - 2026-04-17
+
+### What's Changed
+
+* Fix cache retrieval on Laravel 13 by manually serializing values by @freekmurze in https://github.com/spatie/php-structure-discoverer/pull/40
+
+**Full Changelog**: https://github.com/spatie/php-structure-discoverer/compare/2.4.0...2.4.1
+
+## 2.4.0 - 2026-02-21
+
+Add Laravel 13 support
+
+## 2.3.3 - 2025-11-24
+
+### What's Changed
+
+* Added Symfony 8 support to all symfony/* packages. by @thecaliskan in https://github.com/spatie/php-structure-discoverer/pull/36
+
+**Full Changelog**: https://github.com/spatie/php-structure-discoverer/compare/2.3.2...2.3.3
+
 ## 2.3.2 - 2025-09-22
 
 ### What's Changed

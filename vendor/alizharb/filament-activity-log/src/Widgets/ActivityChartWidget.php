@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AlizHarb\ActivityLog\Widgets;
 
+use Carbon\Carbon;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Support\Facades\DB;
 use Spatie\Activitylog\Models\Activity;
@@ -28,7 +29,8 @@ class ActivityChartWidget extends ChartWidget
      */
     public function getHeading(): ?string
     {
-        return config('filament-activity-log.widgets.activity_chart.heading', 'Activity Over Time');
+        return config('filament-activity-log.widgets.activity_chart.heading')
+            ?? __('filament-activity-log::activity.widgets.activity_chart.heading');
     }
 
     /**
@@ -116,7 +118,7 @@ class ActivityChartWidget extends ChartWidget
         return [
             'datasets' => [
                 [
-                    'label' => config('filament-activity-log.widgets.activity_chart.label', 'Activities'),
+                    'label' => config('filament-activity-log.widgets.activity_chart.label', __('filament-activity-log::activity.widgets.activity_chart.label')),
                     'data' => $data->values()->toArray(),
                     'borderColor' => $borderColor,
                     'backgroundColor' => $fillColor,
@@ -124,7 +126,7 @@ class ActivityChartWidget extends ChartWidget
                     'tension' => config('filament-activity-log.widgets.activity_chart.tension', 0.3),
                 ],
             ],
-            'labels' => $data->keys()->map(fn ($date) => \Carbon\Carbon::parse($date)->format(
+            'labels' => $data->keys()->map(fn ($date) => Carbon::parse($date)->format(
                 config('filament-activity-log.widgets.activity_chart.date_format', 'M d')
             ))->toArray(),
         ];

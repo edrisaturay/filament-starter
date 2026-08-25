@@ -10,6 +10,8 @@ use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Support\Collection;
 use Spatie\Backup\BackupDestination\BackupDestination;
 use Spatie\Backup\Config\Config;
+use Spatie\Backup\Enums\DumpFilenameBase;
+use Spatie\Backup\Events\BackupHasFailed;
 use Spatie\Backup\Events\BackupManifestWasCreated;
 use Spatie\Backup\Events\BackupWasSuccessful;
 use Spatie\Backup\Events\BackupZipWasCreated;
@@ -21,6 +23,7 @@ use Spatie\DbDumper\Databases\Sqlite;
 use Spatie\DbDumper\DbDumper;
 use Spatie\SignalAwareCommand\Facades\Signal;
 use Spatie\TemporaryDirectory\TemporaryDirectory;
+use ZipArchive;
 
 class BackupJob
 {
@@ -37,8 +40,6 @@ class BackupJob
     protected string $filename;
 
     protected TemporaryDirectory $temporaryDirectory;
-
-    protected bool $sendNotifications = true;
 
     protected bool $signals = true;
 
@@ -80,13 +81,6 @@ class BackupJob
         return $this;
     }
 
-    public function disableNotifications(): self
-    {
-        $this->sendNotifications = false;
-
-        return $this;
-    }
-
     public function disableSignals(): self
     {
         $this->signals = false;
@@ -99,6 +93,11 @@ class BackupJob
         $this->filename = Carbon::now()->format(static::FILENAME_FORMAT);
 
         return $this;
+    }
+
+    public function fileSelection(): FileSelection
+    {
+        return $this->fileSelection;
     }
 
     public function setFileSelection(FileSelection $fileSelection): self
@@ -126,13 +125,32 @@ class BackupJob
         return $this;
     }
 
+    public function appendToFilename(string $suffix): self
+    {
+        $extension = pathinfo($this->filename, PATHINFO_EXTENSION);
+        $basename = pathinfo($this->filename, PATHINFO_FILENAME);
+
+        $this->filename = "{$basename}-{$suffix}.{$extension}";
+
+        return $this;
+    }
+
+    public function setDestinationPath(string $path): self
+    {
+        $this->backupDestinations->each(
+            fn (BackupDestination $backupDestination) => $backupDestination->setBackupName($path)
+        );
+
+        return $this;
+    }
+
     public function onlyBackupTo(string $diskName): self
     {
         $this->backupDestinations = $this->backupDestinations->filter(
             fn (BackupDestination $backupDestination) => $backupDestination->diskName() === $diskName
         );
 
-        if (! count($this->backupDestinations)) {
+        if ($this->backupDestinations->isEmpty()) {
             throw InvalidBackupJob::destinationDoesNotExist($diskName);
         }
 
@@ -165,7 +183,7 @@ class BackupJob
         }
 
         try {
-            if (! count($this->backupDestinations)) {
+            if ($this->backupDestinations->isEmpty()) {
                 throw InvalidBackupJob::noDestinationsSpecified();
             }
 
@@ -179,7 +197,7 @@ class BackupJob
 
             $this->copyToBackupDestinations($zipFile);
         } catch (Exception $exception) {
-            consoleOutput()->error("Backup failed because: {$exception->getMessage()}.".PHP_EOL.$exception->getTraceAsString());
+            backupLogger()->error("Backup failed because: {$exception->getMessage()}.".PHP_EOL.$exception->getTraceAsString());
 
             $this->temporaryDirectory->delete();
 
@@ -197,13 +215,13 @@ class BackupJob
     {
         $databaseDumps = $this->dumpDatabases();
 
-        consoleOutput()->info('Determining files to backup...');
+        backupLogger()->info('Determining files to backup...');
 
         $manifest = Manifest::create($this->temporaryDirectory->path('manifest.txt'))
             ->addFiles($databaseDumps)
             ->addFiles($this->filesToBeBackedUp());
 
-        $this->sendNotification(new BackupManifestWasCreated($manifest));
+        event(new BackupManifestWasCreated($manifest));
 
         return $manifest;
     }
@@ -230,21 +248,43 @@ class BackupJob
 
     protected function createZipContainingEveryFileInManifest(Manifest $manifest): string
     {
-        consoleOutput()->info("Zipping {$manifest->count()} files and directories...");
+        backupLogger()->info("Zipping {$manifest->count()} files and directories...");
 
         $pathToZip = $this->temporaryDirectory->path($this->config->backup->destination->filenamePrefix.$this->filename);
 
         $zip = Zip::createForManifest($manifest, $pathToZip);
 
-        consoleOutput()->info("Created zip containing {$zip->count()} files and directories. Size is {$zip->humanReadableSize()}");
+        backupLogger()->info("Created zip containing {$zip->count()} files and directories. Size is {$zip->humanReadableSize()}");
 
-        if ($this->sendNotifications) {
-            $this->sendNotification(new BackupZipWasCreated($pathToZip));
-        } else {
-            app()->call('\Spatie\Backup\Listeners\EncryptBackupArchive@handle', ['event' => new BackupZipWasCreated($pathToZip)]);
+        // Always fire the event (listeners like encryption depend on it)
+        event(new BackupZipWasCreated($pathToZip));
+
+        if ($this->config->backup->verifyBackup) {
+            $this->verifyBackup($pathToZip, $manifest->count());
         }
 
         return $pathToZip;
+    }
+
+    protected function verifyBackup(string $pathToZip, int $expectedFileCount): void
+    {
+        backupLogger()->info('Verifying backup integrity...');
+
+        $zip = new ZipArchive;
+        $result = $zip->open($pathToZip, ZipArchive::RDONLY);
+
+        if ($result !== true) {
+            throw new Exception("Backup verification failed: could not open zip file. Error code: {$result}");
+        }
+
+        $actualCount = $zip->numFiles;
+        $zip->close();
+
+        if ($actualCount === 0) {
+            throw new Exception('Backup verification failed: zip file is empty.');
+        }
+
+        backupLogger()->info("Backup verified: {$actualCount} files in archive.");
     }
 
     /**
@@ -257,11 +297,11 @@ class BackupJob
     {
         return $this->dbDumpers
             ->map(function (DbDumper $dbDumper, string $key): string {
-                consoleOutput()->info("Dumping database {$dbDumper->getDbName()}...");
+                backupLogger()->info("Dumping database {$dbDumper->getDbName()}...");
 
                 $dbType = mb_strtolower(basename(str_replace('\\', '/', $dbDumper::class)));
 
-                if ($this->config->backup->databaseDumpFilenameBase === 'connection') {
+                if ($this->config->backup->databaseDumpFilenameBase === DumpFilenameBase::Connection) {
                     $dbName = $key;
                 } elseif ($dbDumper instanceof Sqlite) {
                     $dbName = $key.'-database';
@@ -298,35 +338,45 @@ class BackupJob
      */
     protected function copyToBackupDestinations(string $path): void
     {
+        $continueOnFailure = $this->config->backup->destination->continueOnFailure;
+        $failures = [];
+
         $this->backupDestinations
-            ->each(function (BackupDestination $backupDestination) use ($path) {
+            ->each(function (BackupDestination $backupDestination) use ($path, $continueOnFailure, &$failures) {
                 try {
                     if (! $backupDestination->isReachable()) {
                         throw new Exception("Could not connect to disk {$backupDestination->diskName()} because: {$backupDestination->connectionError()}");
                     }
 
-                    consoleOutput()->info("Copying zip to disk named {$backupDestination->diskName()}...");
+                    backupLogger()->info("Copying zip to disk named {$backupDestination->diskName()}...");
 
                     $backupDestination->write($path);
 
-                    consoleOutput()->info("Successfully copied zip to disk named {$backupDestination->diskName()}.");
+                    backupLogger()->info("Successfully copied zip to disk named {$backupDestination->diskName()}.");
 
-                    $this->sendNotification(new BackupWasSuccessful($backupDestination));
+                    event(new BackupWasSuccessful(
+                        diskName: $backupDestination->diskName(),
+                        backupName: $backupDestination->backupName(),
+                    ));
                 } catch (Exception $exception) {
-                    consoleOutput()->error("Copying zip failed because: {$exception->getMessage()}.");
+                    backupLogger()->error("Copying zip failed because: {$exception->getMessage()}.");
 
-                    throw BackupFailed::from($exception)->destination($backupDestination);
+                    if (! $continueOnFailure) {
+                        throw BackupFailed::from($exception)->destination($backupDestination);
+                    }
+
+                    $failures[] = ['destination' => $backupDestination, 'exception' => $exception];
+
+                    event(new BackupHasFailed(
+                        exception: $exception,
+                        diskName: $backupDestination->diskName(),
+                        backupName: $backupDestination->backupName(),
+                    ));
                 }
             });
-    }
 
-    protected function sendNotification(object|string $notification): void
-    {
-        if ($this->sendNotifications) {
-            rescue(
-                fn () => event($notification),
-                fn () => consoleOutput()->error('Sending notification failed')
-            );
+        if ($continueOnFailure && count($failures) === count($this->backupDestinations)) {
+            throw BackupFailed::from(new Exception('Backup failed on all destinations.'));
         }
     }
 

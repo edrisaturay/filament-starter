@@ -38,12 +38,41 @@ class QueueMonitorProvider extends ServiceProvider
         });
     }
 
+    protected static function getConnection(): string
+    {
+        return config('filament-jobs-monitor.connection') ?? config('database.default');
+    }
+
     /**
      * Get Job ID.
      */
     public static function getJobId(JobContract $job): string|int
     {
-        return QueueMonitor::getJobId($job);
+        return resolve(QueueMonitor::class)::getJobId($job);
+    }
+
+    /**
+     * Extract tenant ID from job payload.
+     */
+    protected static function getTenantIdFromJob(JobContract $job): null|int|string
+    {
+        if (! config('filament-jobs-monitor.tenancy.enabled')) {
+            return null;
+        }
+
+        $payload = $job->payload();
+
+        if (! isset($payload['data']['command'])) {
+            return null;
+        }
+
+        try {
+            $command = unserialize($payload['data']['command']);
+
+            return $command->tenantId ?? null;
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     /**
@@ -53,22 +82,24 @@ class QueueMonitorProvider extends ServiceProvider
     {
         $now = now();
         $jobId = self::getJobId($job);
+        $tenantId = self::getTenantIdFromJob($job);
 
-        $monitor = QueueMonitor::query()->create([
+        $monitor = resolve(QueueMonitor::class)::on(self::getConnection())->create([
             'job_id' => $jobId,
             'name' => $job->resolveName(),
             'queue' => $job->getQueue(),
             'started_at' => $now,
             'attempt' => $job->attempts(),
             'progress' => 0,
+            'tenant_id' => $tenantId,
         ]);
 
-        QueueMonitor::query()
+        resolve(QueueMonitor::class)::on(self::getConnection())
             ->where('id', '!=', $monitor->id)
             ->where('job_id', $jobId)
             ->where('failed', false)
             ->whereNull('finished_at')
-            ->each(function (QueueMonitor $monitor) {
+            ->each(function ($monitor) {
                 $monitor->finished_at = now();
                 $monitor->failed = true;
                 $monitor->save();
@@ -80,7 +111,7 @@ class QueueMonitorProvider extends ServiceProvider
      */
     protected static function jobFinished(JobContract $job, bool $failed = false, ?\Throwable $exception = null): void
     {
-        $monitor = QueueMonitor::query()
+        $monitor = resolve(QueueMonitor::class)::on(self::getConnection())
             ->where('job_id', self::getJobId($job))
             ->where('attempt', $job->attempts())
             ->orderByDesc('started_at')

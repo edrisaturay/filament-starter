@@ -2,6 +2,86 @@
 
 All notable changes to `laravel-health` will be documented in this file.
 
+## 1.39.2 - 2026-04-23
+
+### What's Changed
+
+* Remove 'health' container alias to prevent middleware name collision by @freekmurze in https://github.com/spatie/laravel-health/pull/311
+
+**Full Changelog**: https://github.com/spatie/laravel-health/compare/1.39.1...1.39.2
+
+## 1.39.1 - 2026-03-17
+
+### What's Changed
+
+* Round diffInMinutes float in failure messages by @mattiasgeniar in https://github.com/spatie/laravel-health/pull/309
+
+### New Contributors
+
+* @mattiasgeniar made their first contribution in https://github.com/spatie/laravel-health/pull/309
+
+**Full Changelog**: https://github.com/spatie/laravel-health/compare/1.39.0...1.39.1
+
+## 1.39.0 - 2026-03-01
+
+### What's Changed
+
+* Add `timeoutMs()` method to `PingCheck` for sub-second timeout control by @faytekin in https://github.com/spatie/laravel-health/pull/307
+* Remove `laravel/slack-notification-channel` from require-dev to fix L13 CI builds in https://github.com/spatie/laravel-health/pull/308
+
+### New Contributors
+
+* @faytekin made their first contribution in https://github.com/spatie/laravel-health/pull/307
+
+**Full Changelog**: https://github.com/spatie/laravel-health/compare/1.38.0...1.39.0
+
+## 1.38.0 - 2026-02-22
+
+Add Laravel 13.x support
+
+## 1.37.0 - 2026-02-12
+
+### What's Changed
+
+* Add `failAfterMinutes` support to `QueueCheck` by @stefket in https://github.com/spatie/laravel-health/pull/305
+
+**Full Changelog**: https://github.com/spatie/laravel-health/compare/1.36.0...1.37.0
+
+## 1.36.0 - 2026-02-09
+
+### What's Changed
+
+* Fix snapshot tests broken by phpunit-snapshot-assertions 5.3.1 by @freekmurze in https://github.com/spatie/laravel-health/pull/304
+* Extract `failAfterMinutes` logic into reusable `HasFailedAfter` trait / add support to HorizonCheck by @onlime in https://github.com/spatie/laravel-health/pull/303
+
+### New Contributors
+
+* @freekmurze made their first contribution in https://github.com/spatie/laravel-health/pull/304
+* @onlime made their first contribution in https://github.com/spatie/laravel-health/pull/303
+
+**Full Changelog**: https://github.com/spatie/laravel-health/compare/1.35.0...1.36.0
+
+## 1.35.0 - 2026-02-01
+
+### What's Changed
+
+* Add `only_on_failure` option for notifications by @faustoFF in https://github.com/spatie/laravel-health/pull/301
+* Add `failAfterMinutes` support to PingCheck by @faustoFF in https://github.com/spatie/laravel-health/pull/300
+
+**Full Changelog**: https://github.com/spatie/laravel-health/compare/1.34.10...1.35.0
+
+## 1.34.10 - 2025-12-22
+
+### What's Changed
+
+* Adding the $updated_at property to the PHPDoc of HealthCheckResultHistoryItem by @ruuddeenen in https://github.com/spatie/laravel-health/pull/299
+
+### New Contributors
+
+* @ruuddeenen made their first contribution in https://github.com/spatie/laravel-health/pull/299
+
+**Full Changelog**: https://github.com/spatie/laravel-health/compare/1.34.9...1.34.10
+
 ## 1.34.9 - 2025-11-28
 
 ### What's Changed

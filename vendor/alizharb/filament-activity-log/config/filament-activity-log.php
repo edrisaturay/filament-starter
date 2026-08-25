@@ -1,6 +1,12 @@
 <?php
 
 declare(strict_types=1);
+use AlizHarb\ActivityLog\Pages\UserActivitiesPage;
+use AlizHarb\ActivityLog\Resources\ActivityLogs\ActivityLogResource;
+use AlizHarb\ActivityLog\Widgets\ActivityChartWidget;
+use AlizHarb\ActivityLog\Widgets\ActivityHeatmapWidget;
+use AlizHarb\ActivityLog\Widgets\ActivityStatsWidget;
+use AlizHarb\ActivityLog\Widgets\LatestActivityWidget;
 
 return [
     /*
@@ -12,7 +18,7 @@ return [
     |
     */
     'resource' => [
-        'class' => \AlizHarb\ActivityLog\Resources\ActivityLogs\ActivityLogResource::class,
+        'class' => ActivityLogResource::class,
         'group' => null,
         'sort' => null,
         'default_sort_column' => 'created_at',
@@ -92,6 +98,11 @@ return [
                 'searchable' => true,
                 'sortable' => true,
             ],
+            'subject_id' => [
+                'visible' => true,
+                'searchable' => true,
+                'sortable' => true,
+            ],
             'causer' => [
                 'visible' => true,
                 'searchable' => true,
@@ -122,11 +133,13 @@ return [
             'created_at' => true,
             'causer' => true,
             'subject_type' => true,
+            'subject_id' => true,
         ],
         'actions' => [
             'timeline' => true,
             'view' => true,
             'revert' => true,
+            'restore' => true,
             'delete' => true,
             'export' => true,
         ],
@@ -201,14 +214,12 @@ return [
         'enabled' => false,
 
         /**
-         * Custom authorization callback.
+         * Custom invokable authorizer class for accessing the activity log.
          *
-         * This callback receives the authenticated user and should return a boolean.
          * If set, this takes precedence over the 'enabled' setting and permission checks.
+         * This invokable receives the authenticated user and should return a boolean.
          *
-         * Example: fn($user) => $user->id === 1
-         * Example: fn($user) => $user->hasRole('super_admin')
-         * Example: 'App\Support\ActivityLogAuthorization' (class with __invoke method)
+         * Example: 'App\Support\ActivityLogAuthorization' (class with __invoke(User $user): bool)
          */
         'custom_authorization' => null,
 
@@ -232,7 +243,7 @@ return [
     'pages' => [
         'user_activities' => [
             'enabled' => true,
-            'class' => \AlizHarb\ActivityLog\Pages\UserActivitiesPage::class,
+            'class' => UserActivitiesPage::class,
             'navigation_label' => null, // null uses translation key
             'navigation_group' => null, // null uses resource group
             'navigation_sort' => 2,
@@ -252,8 +263,10 @@ return [
         'enabled' => true,
         'dashboard' => true,
         'widgets' => [
-            \AlizHarb\ActivityLog\Widgets\ActivityChartWidget::class,
-            \AlizHarb\ActivityLog\Widgets\LatestActivityWidget::class,
+            ActivityChartWidget::class,
+            LatestActivityWidget::class,
+            ActivityHeatmapWidget::class,
+            ActivityStatsWidget::class,
         ],
 
         /**
@@ -311,5 +324,27 @@ return [
                 'created_at' => true,
             ],
         ],
+    ],
+    /*
+    |--------------------------------------------------------------------------
+    | Advanced Settings (v1.3.0)
+    |--------------------------------------------------------------------------
+    |
+    | Configuration for new features in v1.3.0.
+    |
+    */
+    'dashboard' => [
+        'enabled' => false,
+        'title' => null, // null uses translation key
+        'navigation_group' => null, // null uses resource group
+        'navigation_sort' => 0,
+        'navigation_icon' => 'heroicon-o-presentation-chart-bar',
+    ],
+
+    'auto_context' => [
+        'enabled' => true,
+        'capture_ip' => true,
+        'capture_browser' => true,
+        'capture_batch' => true,
     ],
 ];

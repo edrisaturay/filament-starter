@@ -66,6 +66,13 @@ trait HasGlobalSearch
         return $this;
     }
 
+    public function isGloballySearchable(?string $resourceClass = null): bool
+    {
+        $result = $this->getPropertyWithDefaults('isGloballySearchable', $resourceClass);
+
+        return $result ?? true;
+    }
+
     public function canGloballySearch(?string $resourceClass = null): bool
     {
         $result = $this->getPropertyWithDefaults('isGloballySearchable', $resourceClass);

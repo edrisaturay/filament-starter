@@ -73,7 +73,12 @@
 
                 {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::SIDEBAR_LOGO_BEFORE) }}
 
-                <div x-show="$store.sidebar.isOpen" class="fi-sidebar-header-logo-ctn">
+                <div
+                    @if ($isSidebarCollapsibleOnDesktop || $isSidebarFullyCollapsibleOnDesktop)
+                        x-show="$store.sidebar.isOpen"
+                    @endif
+                    class="fi-sidebar-header-logo-ctn"
+                >
                     @if ($homeUrl = filament()->getHomeUrl())
                         <a {{ \Filament\Support\generate_href_html($homeUrl) }}>
                             <x-filament-panels::logo />
@@ -179,7 +184,7 @@
         @if ($shouldRenderFooter)
             <div class="fi-sidebar-footer">
                 @if ($hasDatabaseNotificationsInSidebar)
-                    @livewire(Filament\Livewire\DatabaseNotifications::class, [
+                    @livewire(filament()->getDatabaseNotificationsLivewireComponent(), [
                         'lazy' => filament()->hasLazyLoadedDatabaseNotifications(),
                     ])
                 @endif

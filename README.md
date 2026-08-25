@@ -72,6 +72,13 @@ The starter kit integrates `swisnl/filament-backgrounds`.
 - **Global Config**: Customize attribution, cache time (remember), and image providers in `config/filament-starter.php`.
 - **Custom Images**: Supports `my-images` provider with a configurable directory.
 
+## Column Filters Support
+The starter kit bundles `zvizvi/filament-column-filters` (registry key `column-filters`, enabled by default on every panel that registers `FilamentStarterPlugin`).
+- **Excel-style header filters**: add `->columnFilter(ColumnFilter::search()|date()|select()|range())` to any table column; a backing table filter (`cf_{column}`) is registered automatically and shows the usual filter indicators.
+- **Syncing**: a regular filter named like the column (or any `SelectFilter` on the same attribute) is synced with automatically, otherwise point at it with `->syncWith('filter_name', [...])`.
+- **Headless tables**: pages that build `getTable()` outside a Livewire request need `Zvizvi\FilamentColumnFilters\Concerns\HasColumnFilters` on the page class itself.
+- **Toggle**: disable per panel from **Plugin Management** or the `column-filters` override row; the `columnFilter()` macro is only available on panels where the plugin is registered.
+
 ## Revive Recycle Bin Support
 The starter kit integrates `promethys/revive` for centralized management of deleted records.
 - **Scoping Control**: Configure User-scoping and Tenant-scoping globally via `config/filament-starter.php`.

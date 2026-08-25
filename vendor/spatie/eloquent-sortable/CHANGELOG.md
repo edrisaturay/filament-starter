@@ -2,6 +2,32 @@
 
 All notable changes to `eloquent-sortable` will be documented in this file
 
+## 5.0.0 - 2026-02-12
+
+### What's changed
+
+- Use `save()` instead of `saveQuietly()` in `moveAfter` and `moveBefore` for consistent model event behavior (#200)
+- Drop support for PHP 8.1 (EOL)
+- Drop support for Laravel 9 (EOL)
+
+### Breaking changes
+
+- Minimum PHP version is now 8.2
+- Minimum Laravel version is now 10
+- `moveAfter` and `moveBefore` now fire model events (previously used `saveQuietly()`)
+
+## 4.5.2 - 2025-08-25
+
+### What's Changed
+
+* Revert "Check for parent::buildSortQuery() (#188)" by @phh in https://github.com/spatie/eloquent-sortable/pull/193
+
+### New Contributors
+
+* @phh made their first contribution in https://github.com/spatie/eloquent-sortable/pull/193
+
+**Full Changelog**: https://github.com/spatie/eloquent-sortable/compare/4.5.1...4.5.2
+
 ## 4.5.1 - 2025-08-25
 
 ### What's Changed

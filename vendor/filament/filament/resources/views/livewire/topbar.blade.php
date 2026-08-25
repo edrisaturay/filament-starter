@@ -174,8 +174,8 @@
                                             @php
                                                 $isItemActive = $item->isActive();
                                                 $itemBadge = $item->getBadge();
-                                                $itemBadgeColor = $item->getBadgeColor();
-                                                $itemBadgeTooltip = $item->getBadgeTooltip();
+                                                $itemBadgeColor = $item->getBadgeColor($itemBadge);
+                                                $itemBadgeTooltip = $item->getBadgeTooltip($itemBadge);
                                                 $itemUrl = $item->getUrl();
                                                 $itemIcon = $isItemActive ? ($item->getActiveIcon() ?? $item->getIcon()) : $item->getIcon();
                                                 $shouldItemOpenUrlInNewTab = $item->shouldOpenUrlInNewTab();
@@ -205,8 +205,8 @@
                                     $isItemActive = $item->isActive();
                                     $itemActiveIcon = $item->getActiveIcon();
                                     $itemBadge = $item->getBadge();
-                                    $itemBadgeColor = $item->getBadgeColor();
-                                    $itemBadgeTooltip = $item->getBadgeTooltip();
+                                    $itemBadgeColor = $item->getBadgeColor($itemBadge);
+                                    $itemBadgeTooltip = $item->getBadgeTooltip($itemBadge);
                                     $itemIcon = $item->getIcon();
                                     $shouldItemOpenUrlInNewTab = $item->shouldOpenUrlInNewTab();
                                     $itemUrl = $item->getUrl();
@@ -251,7 +251,7 @@
 
             @if (filament()->auth()->check())
                 @if (filament()->hasDatabaseNotifications() && filament()->getDatabaseNotificationsPosition() === \Filament\Enums\DatabaseNotificationsPosition::Topbar)
-                    @livewire(Filament\Livewire\DatabaseNotifications::class, [
+                    @livewire(filament()->getDatabaseNotificationsLivewireComponent(), [
                         'lazy' => filament()->hasLazyLoadedDatabaseNotifications(),
                     ])
                 @endif

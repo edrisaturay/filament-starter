@@ -13,6 +13,7 @@ use Filament\Forms\Components\RichEditor\EditorCommand;
 use Filament\Forms\Components\RichEditor\FileAttachmentProviders\Contracts\FileAttachmentProvider;
 use Filament\Forms\Components\RichEditor\MentionProvider;
 use Filament\Forms\Components\RichEditor\Models\Contracts\HasRichContent;
+use Filament\Forms\Components\RichEditor\Plugins\Contracts\HasToolbarButtons;
 use Filament\Forms\Components\RichEditor\Plugins\Contracts\RichContentPlugin;
 use Filament\Forms\Components\RichEditor\RichContentAttribute;
 use Filament\Forms\Components\RichEditor\RichContentCustomBlock;
@@ -20,6 +21,7 @@ use Filament\Forms\Components\RichEditor\RichContentRenderer;
 use Filament\Forms\Components\RichEditor\RichEditorTool;
 use Filament\Forms\Components\RichEditor\StateCasts\RichEditorStateCast;
 use Filament\Forms\Components\RichEditor\TextColor;
+use Filament\Forms\Components\RichEditor\ToolbarButtonGroup;
 use Filament\Schemas\Components\StateCasts\Contracts\StateCast;
 use Filament\Support\Colors\Color;
 use Filament\Support\Components\Attributes\ExposedLivewireMethod;
@@ -28,6 +30,7 @@ use Filament\Support\Icons\Heroicon;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Renderless;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
@@ -35,11 +38,20 @@ use Tiptap\Editor;
 
 class RichEditor extends Field implements Contracts\CanBeLengthConstrained
 {
+    // Security: The rich editor outputs raw HTML. Attackers can intercept
+    // the value and send arbitrary HTML to the backend. When rendering
+    // in Blade views, always sanitize using `sanitizeHtml()` or the
+    // `RichContentRenderer`. Never use `{!! $content !!}` unsanitized.
+    // The default sanitizer permits inline `style` attributes —
+    // configure a restrictive one for untrusted user content.
+
     use Concerns\CanBeLengthConstrained;
     use Concerns\HasExtraInputAttributes;
     use Concerns\HasFileAttachments;
     use Concerns\HasPlaceholder;
-    use Concerns\InteractsWithToolbarButtons;
+    use Concerns\InteractsWithToolbarButtons {
+        Concerns\InteractsWithToolbarButtons::getToolbarButtons as getBaseToolbarButtons;
+    }
     use HasExtraAlpineAttributes;
 
     /**
@@ -52,7 +64,7 @@ class RichEditor extends Field implements Contracts\CanBeLengthConstrained
     /**
      * @var array<string> | Closure
      */
-    protected array | Closure $linkProtocols = ['http', 'https', 'mailto'];
+    protected array | Closure $linkProtocols = ['http', 'https', 'ftp', 'ftps', 'mailto', 'tel', 'callto', 'sms', 'cid', 'xmpp'];
 
     protected bool | Closure | null $isJson = null;
 
@@ -86,6 +98,10 @@ class RichEditor extends Field implements Contracts\CanBeLengthConstrained
     protected ?Closure $getFileAttachmentUrlFromAnotherRecordUsing = null;
 
     protected ?Closure $saveFileAttachmentFromAnotherRecordUsing = null;
+
+    protected bool | Closure $shouldPreventFileAttachmentPathTampering = false;
+
+    protected ?Closure $allowFileAttachmentPathUsing = null;
 
     protected string | Closure | null $activePanel = null;
 
@@ -158,22 +174,48 @@ class RichEditor extends Field implements Contracts\CanBeLengthConstrained
                 ->jsHandler('$getEditor()?.chain().focus().toggleHeading({ level: 1 }).run()')
                 ->activeKey('heading')
                 ->activeOptions(['level' => 1])
-                ->icon(Heroicon::H1)
+                ->icon('fi-o-h1')
                 ->iconAlias('forms:components.rich-editor.toolbar.h1'),
             RichEditorTool::make('h2')
                 ->label(__('filament-forms::components.rich_editor.tools.h2'))
                 ->jsHandler('$getEditor()?.chain().focus().toggleHeading({ level: 2 }).run()')
                 ->activeKey('heading')
                 ->activeOptions(['level' => 2])
-                ->icon(Heroicon::H2)
+                ->icon('fi-o-h2')
                 ->iconAlias('forms:components.rich-editor.toolbar.h2'),
             RichEditorTool::make('h3')
                 ->label(__('filament-forms::components.rich_editor.tools.h3'))
                 ->jsHandler('$getEditor()?.chain().focus().toggleHeading({ level: 3 }).run()')
                 ->activeKey('heading')
                 ->activeOptions(['level' => 3])
-                ->icon(Heroicon::H3)
+                ->icon('fi-o-h3')
                 ->iconAlias('forms:components.rich-editor.toolbar.h3'),
+            RichEditorTool::make('paragraph')
+                ->label(__('filament-forms::components.rich_editor.tools.paragraph'))
+                ->jsHandler('$getEditor()?.chain().focus().setParagraph().run()')
+                ->icon('fi-o-paragraph')
+                ->iconAlias('forms:components.rich-editor.toolbar.paragraph'),
+            RichEditorTool::make('h4')
+                ->label(__('filament-forms::components.rich_editor.tools.h4'))
+                ->jsHandler('$getEditor()?.chain().focus().toggleHeading({ level: 4 }).run()')
+                ->activeKey('heading')
+                ->activeOptions(['level' => 4])
+                ->icon('fi-o-h4')
+                ->iconAlias('forms:components.rich-editor.toolbar.h4'),
+            RichEditorTool::make('h5')
+                ->label(__('filament-forms::components.rich_editor.tools.h5'))
+                ->jsHandler('$getEditor()?.chain().focus().toggleHeading({ level: 5 }).run()')
+                ->activeKey('heading')
+                ->activeOptions(['level' => 5])
+                ->icon('fi-o-h5')
+                ->iconAlias('forms:components.rich-editor.toolbar.h5'),
+            RichEditorTool::make('h6')
+                ->label(__('filament-forms::components.rich_editor.tools.h6'))
+                ->jsHandler('$getEditor()?.chain().focus().toggleHeading({ level: 6 }).run()')
+                ->activeKey('heading')
+                ->activeOptions(['level' => 6])
+                ->icon('fi-o-h6')
+                ->iconAlias('forms:components.rich-editor.toolbar.h6'),
             RichEditorTool::make('blockquote')
                 ->label(__('filament-forms::components.rich_editor.tools.blockquote'))
                 ->jsHandler('$getEditor()?.chain().focus().toggleBlockquote().run()')
@@ -310,21 +352,25 @@ class RichEditor extends Field implements Contracts\CanBeLengthConstrained
             RichEditorTool::make('alignStart')
                 ->label(__('filament-forms::components.rich_editor.tools.align_start'))
                 ->jsHandler('$getEditor()?.chain().focus().setTextAlign(\'start\').run()')
+                ->activeJsExpression('$getEditor()?.isActive({ textAlign: \'start\' })')
                 ->icon('fi-o-align-start')
                 ->iconAlias('forms:components.rich-editor.toolbar.align-start'),
             RichEditorTool::make('alignCenter')
                 ->label(__('filament-forms::components.rich_editor.tools.align_center'))
                 ->jsHandler('$getEditor()?.chain().focus().setTextAlign(\'center\').run()')
+                ->activeJsExpression('$getEditor()?.isActive({ textAlign: \'center\' })')
                 ->icon('fi-o-align-center')
                 ->iconAlias('forms:components.rich-editor.toolbar.align-center'),
             RichEditorTool::make('alignEnd')
                 ->label(__('filament-forms::components.rich_editor.tools.align_end'))
                 ->jsHandler('$getEditor()?.chain().focus().setTextAlign(\'end\').run()')
+                ->activeJsExpression('$getEditor()?.isActive({ textAlign: \'end\' })')
                 ->icon('fi-o-align-end')
                 ->iconAlias('forms:components.rich-editor.toolbar.align-end'),
             RichEditorTool::make('alignJustify')
                 ->label(__('filament-forms::components.rich_editor.tools.align_justify'))
                 ->jsHandler('$getEditor()?.chain().focus().setTextAlign(\'justify\').run()')
+                ->activeJsExpression('$getEditor()?.isActive({ textAlign: \'justify\' })')
                 ->icon('fi-o-align-justify')
                 ->iconAlias('forms:components.rich-editor.toolbar.align-justify'),
             RichEditorTool::make('grid')
@@ -353,132 +399,218 @@ class RichEditor extends Field implements Contracts\CanBeLengthConstrained
                 ->iconAlias('forms:components.rich-editor.toolbar.clear_formatting'),
         ]);
 
-        $this->beforeStateDehydrated(function (RichEditor $component, ?array $rawState, ?Model $record): void {
-            $fileAttachmentProvider = $component->getFileAttachmentProvider();
-
-            if ($fileAttachmentProvider?->isExistingRecordRequiredToSaveNewFileAttachments() && (! $record)) {
-                return;
-            }
-
-            $fileAttachmentIds = [];
-
-            $component->rawState(
-                $component->getTipTapEditor()
-                    ->setContent($rawState ?? [
-                        'type' => 'doc',
-                        'content' => [],
-                    ])
-                    ->descendants(function (object &$node) use ($component, &$fileAttachmentIds): void {
-                        if ($node->type !== 'image') {
-                            return;
-                        }
-
-                        if (blank($node->attrs->id ?? null)) {
-                            return;
-                        }
-
-                        $attachment = $component->getUploadedFileAttachment($node->attrs->id);
-
-                        if ($attachment) {
-                            $node->attrs->id = $component->saveUploadedFileAttachment($attachment);
-                            $node->attrs->src = $component->getFileAttachmentUrl($node->attrs->id);
-
-                            $fileAttachmentIds[] = $node->attrs->id;
-
-                            return;
-                        }
-
-                        if (filled($component->getFileAttachmentUrl($node->attrs->id))) {
-                            $fileAttachmentIds[] = $node->attrs->id;
-
-                            return;
-                        }
-
-                        $fileAttachmentIdFromAnotherRecord = $component->saveFileAttachmentFromAnotherRecord($node->attrs->id);
-
-                        if (blank($fileAttachmentIdFromAnotherRecord)) {
-                            $fileAttachmentIds[] = $node->attrs->id;
-
-                            return;
-                        }
-
-                        $node->attrs->id = $fileAttachmentIdFromAnotherRecord;
-                        $node->attrs->src = $component->getFileAttachmentUrl($fileAttachmentIdFromAnotherRecord) ?? $node->attrs->src ?? null;
-                    })
-                    ->getDocument(),
-            );
-
-            $fileAttachmentProvider?->cleanUpFileAttachments(exceptIds: $fileAttachmentIds);
+        $this->beforeStateDehydrated(static function (RichEditor $component): void {
+            $component->saveFileAttachments();
         }, shouldUpdateValidatedStateAfter: true);
 
-        $this->saveRelationshipsUsing(function (RichEditor $component, ?array $rawState, Model $record): void {
-            $fileAttachmentProvider = $component->getFileAttachmentProvider();
+        $this->saveRelationshipsUsing(static function (RichEditor $component): void {
+            $component->saveFileAttachmentsToRecord();
+        });
 
-            if (! $fileAttachmentProvider) {
-                return;
-            }
+        $this->rule(static function (RichEditor $component): Closure {
+            return static function (string $attribute, mixed $value, Closure $fail) use ($component): void {
+                if (blank($value)) {
+                    return;
+                }
 
-            if (! $fileAttachmentProvider->isExistingRecordRequiredToSaveNewFileAttachments()) {
-                return;
-            }
+                $originalPaths = $component->getOriginalFileAttachmentPaths();
+                $attachmentIds = [];
 
-            if (! $record->wasRecentlyCreated) {
-                return;
-            }
-
-            $fileAttachmentIds = [];
-
-            $component->rawState(
                 $component->getTipTapEditor()
-                    ->setContent($rawState ?? [
-                        'type' => 'doc',
-                        'content' => [],
-                    ])
-                    ->descendants(function (object &$node) use ($component, &$fileAttachmentIds): void {
+                    ->setContent($value)
+                    ->descendants(function (object $node) use (&$attachmentIds): void {
                         if ($node->type !== 'image') {
                             return;
                         }
 
-                        if (blank($node->attrs->id ?? null)) {
+                        $id = $node->attrs->id ?? null;
+
+                        if (blank($id)) {
                             return;
                         }
 
-                        $attachment = $component->getUploadedFileAttachment($node->attrs->id);
+                        $attachmentIds[] = $id;
+                    });
 
-                        if ($attachment) {
-                            $node->attrs->id = $component->saveUploadedFileAttachment($attachment);
-                            $node->attrs->src = $component->getFileAttachmentUrl($node->attrs->id);
+                foreach ($attachmentIds as $id) {
+                    if ($component->getUploadedFileAttachment($id) !== null) {
+                        continue;
+                    }
 
-                            $fileAttachmentIds[] = $node->attrs->id;
+                    if ($component->isFileAttachmentPathAuthorized($id, $originalPaths)) {
+                        continue;
+                    }
 
-                            return;
-                        }
+                    $fail(__($component->getValidationMessages()['tampered'] ?? 'filament-forms::validation.tampered_file_path', ['attribute' => $component->getValidationAttribute()]));
 
-                        if (filled($component->getFileAttachmentUrl($node->attrs->id))) {
-                            $fileAttachmentIds[] = $node->attrs->id;
+                    return;
+                }
+            };
+        }, static fn (RichEditor $component): bool => $component->shouldPreventFileAttachmentPathTampering());
+    }
 
-                            return;
-                        }
+    /**
+     * @return array<string>
+     */
+    public function resolveFileAttachmentIds(): array
+    {
+        $fileAttachmentIds = [];
 
-                        $fileAttachmentIdFromAnotherRecord = $component->saveFileAttachmentFromAnotherRecord($node->attrs->id);
+        $this->rawState(
+            $this->getTipTapEditor()
+                ->setContent($this->getRawState() ?? [
+                    'type' => 'doc',
+                    'content' => [],
+                ])
+                ->descendants(function (object &$node) use (&$fileAttachmentIds): void {
+                    if ($node->type !== 'image') {
+                        return;
+                    }
 
-                        if (blank($fileAttachmentIdFromAnotherRecord)) {
-                            $fileAttachmentIds[] = $node->attrs->id;
+                    if (blank($node->attrs->id ?? null)) {
+                        return;
+                    }
 
-                            return;
-                        }
+                    $attachment = $this->getUploadedFileAttachment($node->attrs->id);
 
-                        $node->attrs->id = $fileAttachmentIdFromAnotherRecord;
-                        $node->attrs->src = $component->getFileAttachmentUrl($fileAttachmentIdFromAnotherRecord) ?? $node->attrs->src ?? null;
-                    })
-                    ->getDocument(),
-            );
+                    if ($attachment) {
+                        $node->attrs->id = $this->saveUploadedFileAttachment($attachment);
+                        $node->attrs->src = $this->getFileAttachmentUrl($node->attrs->id);
 
-            $record->setAttribute($component->getContentAttribute()->getName(), $component->getState());
-            $record->save();
+                        $fileAttachmentIds[] = $node->attrs->id;
 
-            $fileAttachmentProvider->cleanUpFileAttachments(exceptIds: $fileAttachmentIds);
-        });
+                        return;
+                    }
+
+                    if (filled($this->getFileAttachmentUrl($node->attrs->id))) {
+                        $fileAttachmentIds[] = $node->attrs->id;
+
+                        return;
+                    }
+
+                    $fileAttachmentIdFromAnotherRecord = $this->saveFileAttachmentFromAnotherRecord($node->attrs->id);
+
+                    if (blank($fileAttachmentIdFromAnotherRecord)) {
+                        $fileAttachmentIds[] = $node->attrs->id;
+
+                        return;
+                    }
+
+                    $node->attrs->id = $fileAttachmentIdFromAnotherRecord;
+                    $node->attrs->src = $this->getFileAttachmentUrl($fileAttachmentIdFromAnotherRecord) ?? $node->attrs->src ?? null;
+                })
+                ->getDocument(),
+        );
+
+        return $fileAttachmentIds;
+    }
+
+    public function preventFileAttachmentPathTampering(bool | Closure $condition = true, ?Closure $allowFilePathUsing = null): static
+    {
+        $this->shouldPreventFileAttachmentPathTampering = $condition;
+        $this->allowFileAttachmentPathUsing = $allowFilePathUsing;
+
+        return $this;
+    }
+
+    public function shouldPreventFileAttachmentPathTampering(): bool
+    {
+        return (bool) $this->evaluate($this->shouldPreventFileAttachmentPathTampering);
+    }
+
+    /**
+     * @param  array<string> | null  $originalPaths
+     */
+    public function isFileAttachmentPathAuthorized(string $file, ?array $originalPaths = null): bool
+    {
+        if (in_array($file, $originalPaths ?? $this->getOriginalFileAttachmentPaths(), strict: true)) {
+            return true;
+        }
+
+        if ($this->allowFileAttachmentPathUsing) {
+            return (bool) $this->evaluate($this->allowFileAttachmentPathUsing, [
+                'file' => $file,
+            ]);
+        }
+
+        return false;
+    }
+
+    /**
+     * @return array<string>
+     */
+    public function getOriginalFileAttachmentPaths(): array
+    {
+        $record = $this->getRecord();
+
+        if (! $record instanceof Model) {
+            return [];
+        }
+
+        $attribute = $this->getName();
+
+        $originalContent = $record->getOriginal($attribute, $record->getAttribute($attribute));
+
+        if (blank($originalContent)) {
+            return [];
+        }
+
+        $ids = [];
+
+        $this->getTipTapEditor()
+            ->setContent($originalContent)
+            ->descendants(function (object $node) use (&$ids): void {
+                if ($node->type !== 'image') {
+                    return;
+                }
+
+                if (blank($node->attrs->id ?? null)) {
+                    return;
+                }
+
+                $ids[] = $node->attrs->id;
+            });
+
+        return $ids;
+    }
+
+    public function saveFileAttachments(): void
+    {
+        $fileAttachmentProvider = $this->getFileAttachmentProvider();
+
+        if ($fileAttachmentProvider?->isExistingRecordRequiredToSaveNewFileAttachments() && (! $this->getRecord())) {
+            return;
+        }
+
+        $fileAttachmentIds = $this->resolveFileAttachmentIds();
+
+        $fileAttachmentProvider?->cleanUpFileAttachments(exceptIds: $fileAttachmentIds);
+    }
+
+    public function saveFileAttachmentsToRecord(): void
+    {
+        $fileAttachmentProvider = $this->getFileAttachmentProvider();
+
+        if (! $fileAttachmentProvider) {
+            return;
+        }
+
+        if (! $fileAttachmentProvider->isExistingRecordRequiredToSaveNewFileAttachments()) {
+            return;
+        }
+
+        $record = $this->getRecord();
+
+        if (! $record->wasRecentlyCreated) {
+            return;
+        }
+
+        $fileAttachmentIds = $this->resolveFileAttachmentIds();
+
+        $record->setAttribute($this->getContentAttribute()->getName(), $this->getState());
+        $record->save();
+
+        $fileAttachmentProvider->cleanUpFileAttachments(exceptIds: $fileAttachmentIds);
     }
 
     public function isDehydrated(): bool
@@ -574,6 +706,7 @@ class RichEditor extends Field implements Contracts\CanBeLengthConstrained
     {
         return RichContentRenderer::make()
             ->plugins($this->getPlugins())
+            ->linkProtocols($this->getLinkProtocols())
             ->getEditor();
     }
 
@@ -672,11 +805,31 @@ class RichEditor extends Field implements Contracts\CanBeLengthConstrained
         );
     }
 
+    /**
+     * @return array<array<string | ToolbarButtonGroup>>
+     */
+    public function getToolbarButtons(): array
+    {
+        $groups = $this->getBaseToolbarButtons();
+        $tools = $this->getTools();
+
+        return array_map(
+            fn (array $group): array => array_map(
+                fn (string | ToolbarButtonGroup $item): string | ToolbarButtonGroup => $item instanceof ToolbarButtonGroup
+                    ? $item->resolve($tools)
+                    : $item,
+                $group,
+            ),
+            $groups,
+        );
+    }
+
     public function getContentAttribute(): ?RichContentAttribute
     {
-        // Do not read content attributes from the model when the rich editor is nested
-        // inside a custom block action modal, since the content attribute should only
-        // be used to configure the parent rich editor.
+        // Do not read content attributes from the model when the
+        // rich editor is nested inside a custom block action
+        // modal — the content attribute should only be used
+        // to configure the parent rich editor.
         if ($this->getRootContainer()->getOperation() === CustomBlockAction::NAME) {
             return null;
         }
@@ -732,13 +885,81 @@ class RichEditor extends Field implements Contracts\CanBeLengthConstrained
     }
 
     /**
+     * @return array<array{type: string, buttons?: array<string | array<string | array<string>>>}>
+     */
+    protected function getExtraToolbarButtonsModifications(): array
+    {
+        $modifications = [];
+
+        foreach ($this->getPlugins() as $plugin) {
+            if (! ($plugin instanceof HasToolbarButtons)) {
+                continue;
+            }
+
+            $enabledButtons = $plugin->getEnabledToolbarButtons();
+
+            if (filled($enabledButtons)) {
+                $modifications[] = [
+                    'type' => 'enable',
+                    'buttons' => $enabledButtons,
+                ];
+            }
+
+            $disabledButtons = $plugin->getDisabledToolbarButtons();
+
+            if (filled($disabledButtons)) {
+                $modifications[] = [
+                    'type' => 'disable',
+                    'buttons' => $disabledButtons,
+                ];
+            }
+        }
+
+        return $modifications;
+    }
+
+    protected function hasToolbarButtonInItem(object $item, string $button): bool
+    {
+        if ($item instanceof ToolbarButtonGroup) {
+            return in_array($button, $item->getButtons());
+        }
+
+        return false;
+    }
+
+    /**
+     * @param  array<string>  $buttonsToDisable
+     */
+    protected function filterDisabledToolbarButtonsFromItem(object $item, array $buttonsToDisable): ?object
+    {
+        if (! ($item instanceof ToolbarButtonGroup)) {
+            return $item;
+        }
+
+        $buttons = array_values(array_filter(
+            $item->getButtons(),
+            static fn (string $button): bool => ! in_array($button, $buttonsToDisable),
+        ));
+
+        if (blank($buttons)) {
+            return null;
+        }
+
+        $item = clone $item;
+        $item->buttons($buttons);
+
+        return $item;
+    }
+
+    /**
      * @return array<string | array<string>>
      */
     public function getDefaultToolbarButtons(): array
     {
         return [
             ['bold', 'italic', 'underline', 'strike', 'subscript', 'superscript', 'link'],
-            ['h2', 'h3', 'alignStart', 'alignCenter', 'alignEnd'],
+            ['h2', 'h3'],
+            ['alignStart', 'alignCenter', 'alignEnd'],
             ['blockquote', 'codeBlock', 'bulletList', 'orderedList'],
             [
                 'table',
@@ -951,7 +1172,7 @@ class RichEditor extends Field implements Contracts\CanBeLengthConstrained
     }
 
     /**
-     * @param  array<class-string<RichContentCustomBlock>> | Closure | null  $blocks
+     * @param  array<class-string<RichContentCustomBlock> | array<class-string<RichContentCustomBlock>>> | Closure | null  $blocks
      */
     public function customBlocks(array | Closure | null $blocks): static
     {
@@ -961,11 +1182,32 @@ class RichEditor extends Field implements Contracts\CanBeLengthConstrained
     }
 
     /**
+     * @return array<class-string<RichContentCustomBlock> | array<class-string<RichContentCustomBlock>>>
+     */
+    protected function resolveCustomBlocks(): array
+    {
+        return $this->evaluate($this->customBlocks) ?? $this->getContentAttribute()?->getCustomBlocksConfig() ?? [];
+    }
+
+    /**
      * @return array<class-string<RichContentCustomBlock>>
      */
     public function getCustomBlocks(): array
     {
-        return $this->evaluate($this->customBlocks) ?? $this->getContentAttribute()?->getCustomBlocks() ?? [];
+        $blocks = $this->resolveCustomBlocks();
+        $result = [];
+
+        foreach ($blocks as $value) {
+            if (is_array($value)) {
+                foreach ($value as $innerKey => $innerValue) {
+                    $result[] = is_string($innerKey) ? $innerKey : $innerValue;
+                }
+            } else {
+                $result[] = $value;
+            }
+        }
+
+        return $result;
     }
 
     /**
@@ -976,6 +1218,8 @@ class RichEditor extends Field implements Contracts\CanBeLengthConstrained
         if (isset($this->cachedCustomBlocks)) {
             return $this->cachedCustomBlocks;
         }
+
+        $this->cachedCustomBlocks = [];
 
         foreach ($this->getCustomBlocks() as $block) {
             $this->cachedCustomBlocks[$block::getId()] = $block;
@@ -993,7 +1237,43 @@ class RichEditor extends Field implements Contracts\CanBeLengthConstrained
     }
 
     /**
-     * @param  array<string | array<string>> | Closure | null  $toolbars
+     * @return Collection<string, Collection<int, class-string<RichContentCustomBlock>>>
+     */
+    public function getGroupedCustomBlocks(): Collection
+    {
+        $blocks = $this->resolveCustomBlocks();
+        $ungrouped = [];
+        $groups = collect();
+
+        foreach ($blocks as $key => $value) {
+            if (is_string($key) && is_array($value)) {
+                $groupBlocks = [];
+
+                foreach ($value as $innerKey => $innerValue) {
+                    $groupBlocks[] = is_string($innerKey) ? $innerKey : $innerValue;
+                }
+
+                $groups->put($key, collect($groupBlocks));
+            } elseif (is_array($value)) {
+                foreach ($value as $innerKey => $innerValue) {
+                    $ungrouped[] = is_string($innerKey) ? $innerKey : $innerValue;
+                }
+            } else {
+                $ungrouped[] = $value;
+            }
+        }
+
+        $result = collect();
+
+        if (! empty($ungrouped)) {
+            $result->put('', collect($ungrouped));
+        }
+
+        return $result->merge($groups);
+    }
+
+    /**
+     * @param  array<string, array<string | ToolbarButtonGroup>> | Closure | null  $toolbars
      */
     public function floatingToolbars(array | Closure | null $toolbars): static
     {
@@ -1003,11 +1283,22 @@ class RichEditor extends Field implements Contracts\CanBeLengthConstrained
     }
 
     /**
-     * @return array<string, array<string>>
+     * @return array<string, array<string | ToolbarButtonGroup>>
      */
     public function getFloatingToolbars(): array
     {
-        return $this->evaluate($this->floatingToolbars) ?? $this->getDefaultFloatingToolbars();
+        $toolbars = $this->evaluate($this->floatingToolbars) ?? $this->getDefaultFloatingToolbars();
+        $tools = $this->getTools();
+
+        return array_map(
+            fn (array $buttons): array => array_map(
+                fn (string | ToolbarButtonGroup $item): string | ToolbarButtonGroup => $item instanceof ToolbarButtonGroup
+                    ? $item->resolve($tools)
+                    : $item,
+                $buttons,
+            ),
+            $toolbars,
+        );
     }
 
     public function getLengthValidationRules(): array

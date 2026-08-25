@@ -2,6 +2,8 @@
 
 namespace AlizHarb\ActivityLog\Resources\ActivityLogs\Schemas;
 
+use AlizHarb\ActivityLog\Support\ActivityChanges;
+use AlizHarb\ActivityLog\Support\ActivityLogTitle;
 use Filament\Facades\Filament;
 use Filament\Infolists\Components\CodeEntry;
 use Filament\Infolists\Components\KeyValueEntry;
@@ -10,6 +12,7 @@ use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 
 /**
@@ -84,7 +87,7 @@ class ActivityLogInfolist
 
                                             TextEntry::make('subject')
                                                 ->label(__('filament-activity-log::activity.infolist.entry.subject'))
-                                                ->getStateUsing(fn ($record) => \AlizHarb\ActivityLog\Support\ActivityLogTitle::get($record->subject))
+                                                ->getStateUsing(fn ($record) => ActivityLogTitle::get($record->subject))
                                                 ->url(function ($record) {
                                                     $subject = $record->subject;
                                                     if (! $subject) {
@@ -122,19 +125,25 @@ class ActivityLogInfolist
                         Tab::make('Changes')
                             ->label(__('filament-activity-log::activity.infolist.tab.changes'))
                             ->icon('heroicon-m-arrows-right-left')
-                            ->visible(config('filament-activity-log.infolist.tabs.changes', true))
+                            ->visible(function (Get $get) {
+                                $hasJsonField = is_array(data_get($get('properties'), 'attributes')) || is_array(data_get($get('properties'), 'old'));
+
+                                return ! $hasJsonField && config('filament-activity-log.infolist.tabs.changes', true);
+                            })
                             ->schema([
-                                KeyValueEntry::make('properties.attributes')
+                                KeyValueEntry::make('new_values')
                                     ->label(__('filament-activity-log::activity.infolist.entry.attributes'))
                                     ->keyLabel(__('filament-activity-log::activity.infolist.entry.key'))
                                     ->valueLabel(__('filament-activity-log::activity.infolist.entry.value'))
-                                    ->visible(fn ($record) => $record->properties->has('attributes') && config('filament-activity-log.infolist.entries.properties_attributes', true)),
+                                    ->getStateUsing(fn ($record) => ActivityChanges::getNewValues($record))
+                                    ->visible(fn ($record) => ActivityChanges::hasNewValues($record) && config('filament-activity-log.infolist.entries.properties_attributes', true)),
 
-                                KeyValueEntry::make('properties.old')
+                                KeyValueEntry::make('old_values')
                                     ->label(__('filament-activity-log::activity.infolist.entry.old'))
                                     ->keyLabel(__('filament-activity-log::activity.infolist.entry.key'))
                                     ->valueLabel(__('filament-activity-log::activity.infolist.entry.value'))
-                                    ->visible(fn ($record) => $record->properties->has('old') && config('filament-activity-log.infolist.entries.properties_old', true)),
+                                    ->getStateUsing(fn ($record) => ActivityChanges::getOldValues($record))
+                                    ->visible(fn ($record) => ActivityChanges::hasOldValues($record) && config('filament-activity-log.infolist.entries.properties_old', true)),
                             ]),
 
                         Tab::make('Raw Data')
@@ -147,6 +156,13 @@ class ActivityLogInfolist
                                     ->formatStateUsing(fn ($state) => json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES))
                                     ->columnSpanFull()
                                     ->visible(config('filament-activity-log.infolist.entries.properties_raw', true)),
+
+                                CodeEntry::make('attribute_changes')
+                                    ->label('Attribute Changes')
+                                    ->getStateUsing(fn ($record) => ActivityChanges::getAttributeChanges($record))
+                                    ->formatStateUsing(fn ($state) => json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES))
+                                    ->columnSpanFull()
+                                    ->visible(fn ($record) => ! empty(ActivityChanges::getAttributeChanges($record))),
                             ]),
                     ])
                     ->columnSpanFull(),

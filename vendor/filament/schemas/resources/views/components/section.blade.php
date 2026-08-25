@@ -1,4 +1,6 @@
 @php
+    use Illuminate\Support\Js;
+
     $afterHeader = $getChildSchema($schemaComponent::AFTER_HEADER_SCHEMA_KEY)?->toHtmlString();
     $isAside = $isAside();
     $isCollapsed = $isCollapsed();
@@ -17,6 +19,10 @@
     $shouldPersistCollapsed = $shouldPersistCollapsed();
     $isSecondary = $isSecondary();
     $id = $getId();
+
+    $stateResetHandler = ($isCollapsible && (! $isAside) && (! $shouldPersistCollapsed))
+        ? ('if (($event.detail.livewireId === ' . Js::from($this->getId()) . ') && ($event.detail.schemaKey === ' . Js::from($getRootContainer()->getKey()) . ')) $nextTick(() => isCollapsed = ' . Js::from($isCollapsed) . ')')
+        : null;
 @endphp
 
 <div
@@ -47,6 +53,7 @@
     @endif
 
     <x-filament::section
+        :x-on:reset-schema-component-state.window="$stateResetHandler"
         :after-header="$afterHeader"
         :aside="$isAside"
         :collapsed="$isCollapsed"
@@ -67,7 +74,7 @@
         :persist-collapsed="$shouldPersistCollapsed"
         :secondary="$isSecondary"
     >
-        {{ $getChildSchema()->gap(! $isDivided)->extraAttributes(['class' => 'fi-section-content']) }}
+        {{ $getChildSchema()->extraAttributes(['class' => 'fi-section-content']) }}
     </x-filament::section>
 
     @if ($belowContentContainer = $getChildSchema($schemaComponent::BELOW_CONTENT_SCHEMA_KEY)?->toHtmlString())

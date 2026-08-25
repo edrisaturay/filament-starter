@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AchyutN\FilamentLogViewer;
 
+use AchyutN\FilamentLogViewer\Actions\CopyMarkdownAction;
 use AchyutN\FilamentLogViewer\Enums\LogLevel;
 use AchyutN\FilamentLogViewer\Filters\DateRangeFilter;
 use AchyutN\FilamentLogViewer\Filters\FileFilter;
@@ -77,6 +78,12 @@ final class LogTable extends Page implements HasTable
     }
 
     /** @throws Exception */
+    public static function shouldRegisterNavigation(): bool
+    {
+        return self::getPlugin()->shouldRegisterNavigation();
+    }
+
+    /** @throws Exception */
     public static function canAccess(): bool
     {
         return self::getPlugin()->isAuthorized();
@@ -103,6 +110,8 @@ final class LogTable extends Page implements HasTable
     public function table(Table $table): Table
     {
         return $table
+            ->modelLabel(__('filament-log-viewer::log.table.model_label'))
+            ->pluralModelLabel(__('filament-log-viewer::log.table.plural_model_label'))
             ->records(
                 function (?array $filters, ?string $sortColumn, ?string $sortDirection, ?string $search, int $page, int $recordsPerPage): LengthAwarePaginator {
                     $records = Collection::wrap(Log::getRows());
@@ -135,9 +144,7 @@ final class LogTable extends Page implements HasTable
                     ->visible(
                         fn (array $record): bool => $record['log_level'] !== LogLevel::MAIL
                     )
-                    ->hidden(
-                        fn (array $record): bool => count((array) $record['stack']) === 0
-                    )
+                    ->hidden(fn (array $record): bool => ! $record['has_stack'])
                     ->icon(Heroicon::Eye)
                     ->color(Color::Gray)
                     ->schema(fn (Schema $schema): Schema => ErrorLogSchema::configure($schema))
@@ -196,6 +203,7 @@ final class LogTable extends Page implements HasTable
                         return null;
                     })
                     ->slideOver(),
+                CopyMarkdownAction::make(),
             ])
             ->poll(self::getPlugin()->getPollingTime())
             ->filters(
@@ -276,13 +284,22 @@ final class LogTable extends Page implements HasTable
             return $records;
         }
 
-        return $records
-            ->when(filled($filters['date']['from']), fn ($q) => $q->filter(
-                fn (array $log): bool => $log['date'] >= $filters['date']['from']
-            ))
-            ->when(filled($filters['date']['until']), fn ($q) => $q->filter(
-                fn (array $log): bool => $log['date'] <= $filters['date']['until']
-            ));
+        $from = $filters['date']['from'] ?? null;
+        $until = $filters['date']['until'] ?? null;
+
+        if (filled($from)) {
+            $records = $records->filter(
+                fn (array $log): bool => $log['date'] >= $from
+            );
+        }
+
+        if (filled($until)) {
+            return $records->filter(
+                fn (array $log): bool => $log['date'] <= $until
+            );
+        }
+
+        return $records;
     }
 
     /**

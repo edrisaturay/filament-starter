@@ -10,14 +10,31 @@
         }
     }
 
-    &.fi-modal-slide-over {
+    &.fi-modal-slide-over.fi-modal-slide-over-from-start {
         & > .fi-modal-window-ctn > .fi-modal-window {
-            @apply ms-auto overflow-y-auto;
+            @apply me-auto;
+
+            &.fi-transition-enter-start,
+            &.fi-transition-leave-end {
+                @apply -translate-x-full rtl:translate-x-full;
+            }
+        }
+    }
+
+    &.fi-modal-slide-over.fi-modal-slide-over-from-end {
+        & > .fi-modal-window-ctn > .fi-modal-window {
+            @apply ms-auto;
 
             &.fi-transition-enter-start,
             &.fi-transition-leave-end {
                 @apply translate-x-full rtl:-translate-x-full;
             }
+        }
+    }
+
+    &.fi-modal-slide-over {
+        & > .fi-modal-window-ctn > .fi-modal-window {
+            @apply overflow-y-auto;
 
             &.fi-transition-enter-end,
             &.fi-transition-leave-start {
@@ -25,7 +42,7 @@
             }
 
             & .fi-modal-header {
-                @apply gap-x-3;
+                @apply gap-x-3 pt-5;
             }
 
             & .fi-modal-icon-bg {
@@ -33,7 +50,7 @@
             }
 
             & .fi-modal-close-btn {
-                @apply end-6 top-6;
+                @apply end-6 top-5;
             }
         }
     }
@@ -97,7 +114,18 @@
     }
 
     & > .fi-modal-close-overlay {
-        @apply fixed inset-0 z-40 bg-gray-950/50 dark:bg-gray-950/75;
+        @apply fixed inset-0 z-40 bg-gray-950/50 transition-opacity duration-300 dark:bg-gray-950/75;
+    }
+
+    &.fi-modal-open:has(~ .fi-modal.fi-modal-open) > .fi-modal-close-overlay {
+        @apply opacity-0;
+    }
+
+    &.fi-modal-open ~ .fi-modal.fi-modal-open {
+        & > .fi-modal-close-overlay,
+        & > .fi-modal-window-ctn {
+            @apply z-50;
+        }
     }
 
     & > .fi-modal-window-ctn {
@@ -182,6 +210,14 @@
             @apply hidden;
         }
 
+        &.fi-width-3xs {
+            @apply max-w-3xs;
+        }
+
+        &.fi-width-2xs {
+            @apply max-w-2xs;
+        }
+
         &.fi-width-xs {
             @apply max-w-xs;
         }
@@ -226,6 +262,10 @@
             @apply max-w-7xl;
         }
 
+        &.fi-width-none {
+            @apply max-w-none;
+        }
+
         &.fi-width-full {
             @apply max-w-full;
         }
@@ -244,6 +284,10 @@
 
         &.fi-width-prose {
             @apply max-w-prose;
+        }
+
+        &.fi-width-container {
+            @apply container;
         }
 
         &.fi-width-screen-sm {
@@ -352,6 +396,12 @@
             & .fi-modal-footer {
                 @apply px-6;
             }
+        }
+    }
+
+    &.fi-modal-slide-over.fi-modal-has-sticky-header {
+        & > .fi-modal-window-ctn > .fi-modal-window > .fi-modal-header {
+            @apply pb-5;
         }
     }
 

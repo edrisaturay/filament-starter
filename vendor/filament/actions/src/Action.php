@@ -73,6 +73,7 @@ class Action extends ViewComponent implements Arrayable
     use Concerns\HasAction;
     use Concerns\HasArguments;
     use Concerns\HasData;
+    use Concerns\HasExtraModalOverlayAttributes;
     use Concerns\HasExtraModalWindowAttributes;
     use Concerns\HasGroupedIcon;
     use Concerns\HasInfolist;
@@ -178,6 +179,7 @@ class Action extends ViewComponent implements Arrayable
 
         return [
             'name' => $this->getName(),
+            'alpineClickHandler' => $this->getCustomAlpineClickHandler(),
             'color' => $this->getColor(),
             'event' => $this->getEvent(),
             'eventData' => $this->getEventData(),
@@ -225,6 +227,10 @@ class Action extends ViewComponent implements Arrayable
             $static->size($size);
         }
 
+        if (filled($data['alpineClickHandler'] ?? null)) {
+            $static->alpineClickHandler($data['alpineClickHandler']);
+        }
+
         $static->close($data['shouldClose'] ?? false);
         $static->color($data['color'] ?? null);
         $static->disabled($data['isDisabled'] ?? false);
@@ -255,7 +261,7 @@ class Action extends ViewComponent implements Arrayable
         return $this->getView() === static::BADGE_VIEW;
     }
 
-    public function badge(string | int | float | Closure | null $badge = null): static
+    public function badge(string | Closure | null $badge = null): static
     {
         if (func_num_args() === 0) {
             /** @phpstan-ignore-next-line */
@@ -304,6 +310,9 @@ class Action extends ViewComponent implements Arrayable
 
     public function alpineClickHandler(string | Closure | null $handler): static
     {
+        // Security: This JavaScript expression is evaluated on the client.
+        // Never pass user input — only developer-defined expressions.
+
         $this->alpineClickHandler = $handler;
         $this->livewireClickHandlerEnabled(blank($handler));
 
@@ -312,6 +321,9 @@ class Action extends ViewComponent implements Arrayable
 
     public function actionJs(string | Closure | null $action): static
     {
+        // Security: This JavaScript expression is evaluated on the client.
+        // Never pass user input — only developer-defined expressions.
+
         $this->alpineClickHandler($action);
 
         return $this;
@@ -382,7 +394,7 @@ class Action extends ViewComponent implements Arrayable
 
     public function getAlpineClickHandler(): ?string
     {
-        if (filled($handler = $this->evaluate($this->alpineClickHandler))) {
+        if (filled($handler = $this->getCustomAlpineClickHandler())) {
             return $handler;
         }
 
@@ -403,6 +415,11 @@ class Action extends ViewComponent implements Arrayable
         }
 
         return $this->getJsClickHandler();
+    }
+
+    public function getCustomAlpineClickHandler(): ?string
+    {
+        return $this->evaluate($this->alpineClickHandler);
     }
 
     public function livewireTarget(?string $target): static
@@ -456,7 +473,7 @@ class Action extends ViewComponent implements Arrayable
 
         $argumentsParameter = '';
 
-        if (count($arguments = $this->getArguments())) {
+        if (count($arguments = $this->getInvokedArguments() ?? [])) {
             $argumentsParameter .= ', ';
             $argumentsParameter .= Js::from($arguments);
         }
@@ -806,8 +823,8 @@ class Action extends ViewComponent implements Arrayable
             ]))
                 ->merge($this->getExtraAttributes(), escape: false)
                 ->class(['fi-ac-btn-action']),
-            badge: $this->getBadge(),
-            badgeColor: $this->getBadgeColor(),
+            badge: $badge = $this->getBadge(),
+            badgeColor: $this->getBadgeColor($badge),
             color: $this->getColor(),
             form: $this->getFormToSubmit(),
             formId: $this->getFormId(),
@@ -845,9 +862,9 @@ class Action extends ViewComponent implements Arrayable
             ]))
                 ->merge($this->getExtraAttributes(), escape: false)
                 ->class(['fi-ac-grouped-action']),
-            badge: $this->getBadge(),
-            badgeColor: $this->getBadgeColor(),
-            badgeTooltip: $this->getBadgeTooltip(),
+            badge: $badge = $this->getBadge(),
+            badgeColor: $this->getBadgeColor($badge),
+            badgeTooltip: $this->getBadgeTooltip($badge),
             color: $this->getColor(),
             href: ($isDisabled || $shouldPostToUrl) ? null : $url,
             icon: $this->getIcon(default: $this->getGroupedIcon()),
@@ -878,8 +895,8 @@ class Action extends ViewComponent implements Arrayable
             ]))
                 ->merge($this->getExtraAttributes(), escape: false)
                 ->class(['fi-ac-icon-btn-action']),
-            badge: $this->getBadge(),
-            badgeColor: $this->getBadgeColor(),
+            badge: $badge = $this->getBadge(),
+            badgeColor: $this->getBadgeColor($badge),
             color: $this->getColor(),
             form: $this->getFormToSubmit(),
             formId: $this->getFormId(),
@@ -913,8 +930,8 @@ class Action extends ViewComponent implements Arrayable
             ]))
                 ->merge($this->getExtraAttributes(), escape: false)
                 ->class(['fi-ac-link-action']),
-            badge: $this->getBadge(),
-            badgeColor: $this->getBadgeColor(),
+            badge: $badge = $this->getBadge(),
+            badgeColor: $this->getBadgeColor($badge),
             color: $this->getColor(),
             form: $this->getFormToSubmit(),
             formId: $this->getFormId(),

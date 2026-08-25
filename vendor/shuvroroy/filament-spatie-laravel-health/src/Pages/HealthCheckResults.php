@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Artisan;
 use ShuvroRoy\FilamentSpatieLaravelHealth\FilamentSpatieLaravelHealthPlugin;
 use Spatie\Health\Commands\RunHealthChecksCommand;
 use Spatie\Health\ResultStores\ResultStore;
+use UnitEnum;
 
 class HealthCheckResults extends Page
 {
@@ -35,7 +36,7 @@ class HealthCheckResults extends Page
         return __('filament-spatie-health::health.pages.health_check_results.heading');
     }
 
-    public static function getNavigationGroup(): ?string
+    public static function getNavigationGroup(): string | UnitEnum | null
     {
         return FilamentSpatieLaravelHealthPlugin::get()->getNavigationGroup();
     }

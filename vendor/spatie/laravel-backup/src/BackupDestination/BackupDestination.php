@@ -28,7 +28,7 @@ class BackupDestination
 
     public function filesystemType(): string
     {
-        if (is_null($this->disk)) {
+        if ($this->disk === null) {
             return 'unknown';
         }
 
@@ -56,11 +56,11 @@ class BackupDestination
 
     public function write(string $file): void
     {
-        if (! is_null($this->connectionError)) {
+        if ($this->connectionError !== null) {
             throw InvalidBackupDestination::connectionError($this->diskName);
         }
 
-        if (is_null($this->disk)) {
+        if ($this->disk === null) {
             throw InvalidBackupDestination::diskNotSet($this->backupName);
         }
 
@@ -86,6 +86,13 @@ class BackupDestination
         return $this->backupName;
     }
 
+    public function setBackupName(string $backupName): self
+    {
+        $this->backupName = $backupName;
+
+        return $this;
+    }
+
     public function backups(): BackupCollection
     {
         if ($this->backupCollectionCache) {
@@ -94,7 +101,7 @@ class BackupDestination
 
         $files = [];
 
-        if (! is_null($this->disk)) {
+        if ($this->disk !== null) {
             // $this->disk->allFiles() may fail when $this->disk is not reachable
             // in that case we still want to send the notification
             try {
@@ -109,7 +116,7 @@ class BackupDestination
         );
     }
 
-    public function connectionError(): Exception
+    public function connectionError(): ?Exception
     {
         return $this->connectionError;
     }
@@ -122,7 +129,7 @@ class BackupDestination
 
     public function isReachable(): bool
     {
-        if (is_null($this->disk)) {
+        if ($this->disk === null) {
             return false;
         }
 
@@ -152,11 +159,12 @@ class BackupDestination
         return $this->backups()->oldest();
     }
 
+    /** @deprecated Will be removed in the next major version. */
     public function newestBackupIsOlderThan(Carbon $date): bool
     {
         $newestBackup = $this->newestBackup();
 
-        if (is_null($newestBackup)) {
+        if ($newestBackup === null) {
             return true;
         }
 

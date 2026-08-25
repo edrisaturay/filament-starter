@@ -3,16 +3,32 @@
 namespace AlizHarb\ActivityLog\Resources\ActivityLogs\Tables;
 
 use AlizHarb\ActivityLog\Actions\ActivityLogTimelineTableAction;
+use AlizHarb\ActivityLog\Enums\ActivityLogEvent;
+use AlizHarb\ActivityLog\Exporters\ActivityLogExporter;
+use AlizHarb\ActivityLog\Models\Activity;
+use AlizHarb\ActivityLog\Support\ActivityChanges;
+use AlizHarb\ActivityLog\Support\ActivityGrouping;
+use AlizHarb\ActivityLog\Support\ActivityLogCauser;
+use AlizHarb\ActivityLog\Support\ActivityLogTitle;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
+use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\ExportAction as FilamentExportAction;
 use Filament\Actions\ViewAction;
+use Filament\Facades\Filament;
+use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Gate;
 
 /**
  * Class ActivityLogTable
@@ -49,23 +65,28 @@ class ActivityLogTable
                 TextColumn::make('event')
                     ->label(__('filament-activity-log::activity.table.column.event'))
                     ->badge()
-                    ->formatStateUsing(fn ($state) => \AlizHarb\ActivityLog\Enums\ActivityLogEvent::tryFrom($state)?->getLabel() ?? ucfirst((string) $state))
-                    ->color(fn ($state) => \AlizHarb\ActivityLog\Enums\ActivityLogEvent::tryFrom($state)?->getColor() ?? 'gray')
-                    ->icon(fn ($state) => \AlizHarb\ActivityLog\Enums\ActivityLogEvent::tryFrom($state)?->getIcon())
+                    ->formatStateUsing(fn ($state) => ActivityLogEvent::tryFrom($state)?->getLabel() ?? ucfirst((string) $state))
+                    ->color(fn ($state) => ActivityLogEvent::tryFrom($state)?->getColor() ?? 'gray')
+                    ->icon(fn ($state) => ActivityLogEvent::tryFrom($state)?->getIcon())
                     ->searchable(config('filament-activity-log.table.columns.event.searchable', true))
                     ->sortable(config('filament-activity-log.table.columns.event.sortable', true))
                     ->visible(config('filament-activity-log.table.columns.event.visible', true)),
 
                 TextColumn::make('subject_type')
                     ->label(__('filament-activity-log::activity.table.column.subject'))
-                    ->formatStateUsing(fn ($state, $record) => \AlizHarb\ActivityLog\Support\ActivityLogTitle::get($record->subject))
+                    ->formatStateUsing(fn ($state, $record) => ActivityLogTitle::get($record->subject))
                     ->description(fn ($record) => $record->subject_type)
                     ->url(function ($record) {
                         if (! $record->subject || ! function_exists('filament')) {
                             return null;
                         }
 
-                        $resource = \Filament\Facades\Filament::getModelResource($record->subject_type);
+                        // Check for custom URL first
+                        if ($customUrl = ActivityLogTitle::getUrl($record->subject)) {
+                            return $customUrl;
+                        }
+
+                        $resource = Filament::getModelResource($record->subject_type);
 
                         if ($resource && $resource::hasPage('view')) {
                             return $resource::getUrl('view', ['record' => $record->subject]);
@@ -82,6 +103,13 @@ class ActivityLogTable
                     ->visible(config('filament-activity-log.table.columns.subject_type.visible', true))
                     ->toggleable(),
 
+                TextColumn::make('subject_id')
+                    ->label(__('filament-activity-log::activity.table.column.subject_id'))
+                    ->searchable(config('filament-activity-log.table.columns.subject_id.searchable', true))
+                    ->sortable(config('filament-activity-log.table.columns.subject_id.sortable', true))
+                    ->visible(config('filament-activity-log.table.columns.subject_id.visible', true))
+                    ->toggleable(isToggledHiddenByDefault: true),
+
                 TextColumn::make('causer.name')
                     ->label(__('filament-activity-log::activity.table.column.causer'))
                     ->description(fn ($record) => $record->causer?->email)
@@ -90,7 +118,12 @@ class ActivityLogTable
                             return null;
                         }
 
-                        $resource = \Filament\Facades\Filament::getModelResource(get_class($record->causer));
+                        // Check for custom URL first
+                        if ($customUrl = ActivityLogTitle::getUrl($record->causer)) {
+                            return $customUrl;
+                        }
+
+                        $resource = Filament::getModelResource(get_class($record->causer));
 
                         if ($resource && $resource::hasPage('view')) {
                             return $resource::getUrl('view', ['record' => $record->causer]);
@@ -158,24 +191,27 @@ class ActivityLogTable
             ->filters([
                 SelectFilter::make('log_name')
                     ->label(__('filament-activity-log::activity.table.column.log_name'))
-                    ->options(fn () => \Spatie\Activitylog\Models\Activity::query()->distinct()->whereNotNull('log_name')->pluck('log_name', 'log_name')->toArray())
+                    ->options(fn () => Activity::query()->distinct()->whereNotNull('log_name')->pluck('log_name', 'log_name')->toArray())
                     ->visible(config('filament-activity-log.table.filters.log_name', true)),
 
                 SelectFilter::make('event')
                     ->label(__('filament-activity-log::activity.table.filter.event'))
-                    ->options(\AlizHarb\ActivityLog\Enums\ActivityLogEvent::class)
+                    ->options(ActivityLogEvent::class)
                     ->visible(config('filament-activity-log.table.filters.event', true)),
 
                 SelectFilter::make('causer_id')
                     ->label(__('filament-activity-log::activity.table.filter.causer'))
                     ->options(function () {
-                        $causerClass = config('auth.providers.users.model');
+                        $causerClass = ActivityLogCauser::resolveModelClass();
                         if (! $causerClass || ! class_exists($causerClass)) {
                             return [];
                         }
 
-                        return $causerClass::query()
-                            ->whereIn('id', \Spatie\Activitylog\Models\Activity::query()
+                        /** @var Builder $query */
+                        $query = $causerClass::query();
+
+                        return $query
+                            ->whereIn('id', Activity::query()
                                 ->distinct()
                                 ->whereNotNull('causer_id')
                                 ->pluck('causer_id')
@@ -188,7 +224,7 @@ class ActivityLogTable
 
                 SelectFilter::make('subject_type')
                     ->label(__('filament-activity-log::activity.table.filter.subject_type'))
-                    ->options(fn () => \Spatie\Activitylog\Models\Activity::query()
+                    ->options(fn () => Activity::query()
                         ->distinct()
                         ->whereNotNull('subject_type')
                         ->pluck('subject_type', 'subject_type')
@@ -196,6 +232,19 @@ class ActivityLogTable
                         ->toArray()
                     )
                     ->visible(config('filament-activity-log.table.filters.subject_type', true)),
+
+                Filter::make('subject_id')
+                    ->label(__('filament-activity-log::activity.table.column.subject_id'))
+                    ->form([
+                        TextInput::make('value')
+                            ->label(__('filament-activity-log::activity.table.column.subject_id'))
+                            ->numeric(),
+                    ])
+                    ->query(fn (Builder $query, array $data): Builder => $query->when(
+                        filled($data['value'] ?? null),
+                        fn (Builder $query): Builder => $query->where('subject_id', $data['value'])
+                    ))
+                    ->visible(config('filament-activity-log.table.filters.subject_id', true)),
 
                 Filter::make('created_at')
                     ->label(__('filament-activity-log::activity.table.filter.created_at'))
@@ -219,11 +268,11 @@ class ActivityLogTable
                     ->visible(config('filament-activity-log.table.filters.created_at', true)),
 
                 Filter::make('batch_uuid')
-                    ->label('Batch UUID')
+                    ->label(__('filament-activity-log::activity.table.filter.batch'))
                     ->hidden()
                     ->query(fn (Builder $query, array $data): Builder => $query->when(
                         $data['value'] ?? null,
-                        fn (Builder $query, $uuid): Builder => $query->where('batch_uuid', $uuid)
+                        fn (Builder $query, $groupId): Builder => ActivityGrouping::applyGroupFilter($query, $groupId)
                     )),
             ])
             ->filtersTriggerAction(
@@ -232,80 +281,216 @@ class ActivityLogTable
                     ->label(__('filament-activity-log::activity.filters')),
             )
             ->headerActions([
-                \Filament\Actions\ExportAction::make()
-                    ->exporter(\AlizHarb\ActivityLog\Exporters\ActivityLogExporter::class)
+                Action::make('prune')
+                    ->label(__('filament-activity-log::activity.action.prune.label'))
+                    ->icon('heroicon-m-trash')
+                    ->color('danger')
+                    ->form([
+                        DatePicker::make('prune_until')
+                            ->label(__('filament-activity-log::activity.action.prune.date'))
+                            ->default(now()->subDays(30))
+                            ->required(),
+                    ])
+                    ->requiresConfirmation()
+                    ->modalHeading(__('filament-activity-log::activity.action.prune.heading'))
+                    ->modalDescription(__('filament-activity-log::activity.action.prune.confirmation'))
+                    ->action(function (array $data) {
+                        $count = Activity::query()
+                            ->where('created_at', '<', $data['prune_until'])
+                            ->delete();
+
+                        Notification::make()
+                            ->success()
+                            ->title(__('filament-activity-log::activity.action.prune.success', ['count' => $count]))
+                            ->send();
+                    })
+                    ->visible(fn () => config('filament-activity-log.table.actions.prune', true) &&
+                        (config('filament-activity-log.permissions.enabled') === false || Gate::allows('delete_any_activity'))
+                    ),
+
+                FilamentExportAction::make()
+                    ->exporter(ActivityLogExporter::class)
                     ->icon('heroicon-m-arrow-down-tray')
                     ->color('gray')
                     ->visible(config('filament-activity-log.table.actions.export', true)),
             ])
             ->recordActions([
-                \Filament\Actions\ActionGroup::make([
+                ActionGroup::make([
                     ActivityLogTimelineTableAction::make()
                         ->visible(config('filament-activity-log.table.actions.timeline', true)),
                     ViewAction::make()
                         ->visible(config('filament-activity-log.table.actions.view', true)),
 
                     Action::make('view_batch')
-                        ->label('Batch')
+                        ->label(__('filament-activity-log::activity.action.batch.label'))
                         ->icon('heroicon-m-rectangle-stack')
                         ->color('gray')
-                        ->visible(fn ($record) => $record->batch_uuid)
-                        ->url(fn ($record) => request()->url().'?tableFilters[batch_uuid][value]='.$record->batch_uuid),
+                        ->visible(fn ($record) => ActivityGrouping::hasGroup($record) &&
+                            (config('filament-activity-log.permissions.enabled') === false || Gate::allows('view', $record))
+                        )
+                        ->url(fn ($record) => request()->url().'?tableFilters[batch_uuid][value]='.ActivityGrouping::getGroupId($record)),
 
                     Action::make('revert')
+                        ->label(__('filament-activity-log::activity.action.revert.label'))
                         ->icon('heroicon-m-arrow-uturn-left')
                         ->color('warning')
-                        ->requiresConfirmation()
-                        ->modalHeading(__('filament-activity-log::activity.action.revert.heading'))
-                        ->modalDescription(__('filament-activity-log::activity.action.revert.confirmation'))
-                        ->modalSubmitActionLabel(__('filament-activity-log::activity.action.revert.button'))
-                        ->action(function (\Spatie\Activitylog\Models\Activity $record) {
-                            // Check if the activity has old values
-                            if (! $record->properties->has('old')) {
-                                \Filament\Notifications\Notification::make()
-                                    ->warning()
-                                    ->title(__('filament-activity-log::activity.action.revert.no_old_data'))
-                                    ->send();
+                        ->schema(function ($record) {
+                            $old = ActivityChanges::getOldValues($record);
+                            $newValues = ActivityChanges::getNewValues($record);
 
-                                return;
+                            $fields = [];
+                            foreach ($old as $key => $value) {
+                                $currentValue = data_get($newValues, $key);
+                                $fields[] = Checkbox::make("revert_attributes.{$key}")
+                                    ->label($key)
+                                    ->helperText(__('filament-activity-log::activity.action.revert.helper_text', [
+                                        'old' => $value,
+                                        'new' => $currentValue,
+                                    ]));
                             }
 
-                            // Get the subject model
+                            return $fields;
+                        })
+                        ->action(function ($record, array $data) {
                             $subject = $record->subject;
                             if (! $subject) {
-                                \Filament\Notifications\Notification::make()
-                                    ->danger()
-                                    ->title(__('filament-activity-log::activity.action.revert.subject_not_found'))
-                                    ->send();
+                                Notification::make()->danger()->title(__('filament-activity-log::activity.action.revert.subject_not_found'))->send();
 
                                 return;
                             }
 
-                            // Revert the changes
-                            $subject->update($record->properties['old']);
+                            $revertData = [];
+                            $old = ActivityChanges::getOldValues($record);
+                            foreach ($data['revert_attributes'] ?? [] as $key => $shouldRevert) {
+                                if ($shouldRevert && isset($old[$key])) {
+                                    $revertData[$key] = $old[$key];
+                                }
+                            }
 
-                            \Filament\Notifications\Notification::make()
-                                ->success()
-                                ->title(__('filament-activity-log::activity.action.revert.success'))
-                                ->send();
+                            if (empty($revertData)) {
+                                Notification::make()->warning()->title(__('filament-activity-log::activity.action.revert.nothing_selected'))->send();
+
+                                return;
+                            }
+
+                            $subject->update($revertData);
+                            Notification::make()->success()->title(__('filament-activity-log::activity.action.revert.success'))->send();
                         })
-                        ->visible(fn (\Spatie\Activitylog\Models\Activity $record) => config('filament-activity-log.table.actions.revert', true) &&
+                        ->visible(fn ($record) => config('filament-activity-log.table.actions.revert', true) &&
                             $record->event === 'updated' &&
-                            $record->properties->has('old') &&
-                            $record->subject !== null
+                            ActivityChanges::hasOldValues($record) &&
+                            $record->subject !== null &&
+                            (config('filament-activity-log.permissions.enabled') === false || Gate::allows('update', $record))
                         ),
-                    \Filament\Actions\DeleteAction::make()
+
+                    Action::make('restore')
+                        ->label(__('filament-activity-log::activity.action.restore.label'))
+                        ->icon('heroicon-m-arrow-path')
+                        ->color('success')
+                        ->requiresConfirmation()
+                        ->modalHeading(__('filament-activity-log::activity.action.restore.heading'))
+                        ->action(function ($record) {
+                            $modelClass = $record->subject_type;
+                            if (! $modelClass || ! class_exists($modelClass)) {
+                                return;
+                            }
+
+                            $oldValues = ActivityChanges::getOldValues($record);
+                            $attributes = ! empty($oldValues) ? $oldValues : ActivityChanges::getNewValues($record);
+                            if (empty($attributes)) {
+                                return;
+                            }
+
+                            $modelClass::create($attributes);
+                            Notification::make()->success()->title(__('filament-activity-log::activity.action.restore.success'))->send();
+                        })
+                        ->visible(fn ($record) => config('filament-activity-log.table.actions.restore', true) &&
+                            $record->event === 'deleted' &&
+                            $record->subject === null &&
+                            (config('filament-activity-log.permissions.enabled') === false || Gate::allows('restore', $record))
+                        ),
+                    DeleteAction::make()
                         ->requiresConfirmation()
                         ->modalHeading(__('filament-activity-log::activity.action.delete.heading'))
                         ->modalDescription(__('filament-activity-log::activity.action.delete.confirmation'))
                         ->modalSubmitActionLabel(__('filament-activity-log::activity.action.delete.button'))
-                        ->visible(config('filament-activity-log.table.actions.delete', true)),
+                        ->visible(fn ($record) => config('filament-activity-log.table.actions.delete', true) &&
+                            (config('filament-activity-log.permissions.enabled') === false || Gate::allows('delete', $record))
+                        ),
                 ]),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
+                        ->modalDescription(__('filament-activity-log::activity.action.bulk.delete.confirmation'))
                         ->visible(config('filament-activity-log.table.bulk_actions.delete', true)),
+
+                    BulkAction::make('restore_selected')
+                        ->label(__('filament-activity-log::activity.action.bulk.restore.label'))
+                        ->icon('heroicon-m-arrow-path')
+                        ->color('success')
+                        ->requiresConfirmation()
+                        ->modalHeading(__('filament-activity-log::activity.action.bulk.restore.label'))
+                        ->modalDescription(__('filament-activity-log::activity.action.bulk.restore.confirmation'))
+                        ->action(function ($records) {
+                            $restoredCount = 0;
+
+                            foreach ($records as $record) {
+                                if ($record->event !== 'deleted' || $record->subject !== null) {
+                                    continue;
+                                }
+
+                                $modelClass = $record->subject_type;
+                                if (! $modelClass || ! class_exists($modelClass)) {
+                                    continue;
+                                }
+
+                                $oldValues = ActivityChanges::getOldValues($record);
+                                $attributes = ! empty($oldValues) ? $oldValues : ActivityChanges::getNewValues($record);
+                                if (empty($attributes)) {
+                                    continue;
+                                }
+
+                                $modelClass::create($attributes);
+                                $restoredCount++;
+                            }
+
+                            if ($restoredCount > 0) {
+                                Notification::make()
+                                    ->success()
+                                    ->title(__('filament-activity-log::activity.action.bulk.restore.success', ['count' => $restoredCount]))
+                                    ->send();
+                            }
+                        })
+                        ->visible(fn () => config('filament-activity-log.table.actions.restore', true)),
+
+                    BulkAction::make('revert_selected')
+                        ->label(__('filament-activity-log::activity.action.bulk.revert.label'))
+                        ->icon('heroicon-m-arrow-uturn-left')
+                        ->color('warning')
+                        ->requiresConfirmation()
+                        ->modalHeading(__('filament-activity-log::activity.action.bulk.revert.label'))
+                        ->modalDescription(__('filament-activity-log::activity.action.bulk.revert.confirmation'))
+                        ->action(function ($records) {
+                            $revertedCount = 0;
+
+                            foreach ($records as $record) {
+                                if ($record->event !== 'updated' || ! ActivityChanges::hasOldValues($record) || ! $record->subject) {
+                                    continue;
+                                }
+
+                                $record->subject->update(ActivityChanges::getOldValues($record));
+                                $revertedCount++;
+                            }
+
+                            if ($revertedCount > 0) {
+                                Notification::make()
+                                    ->success()
+                                    ->title(__('filament-activity-log::activity.action.bulk.revert.success', ['count' => $revertedCount]))
+                                    ->send();
+                            }
+                        })
+                        ->visible(fn () => config('filament-activity-log.table.actions.revert', true)),
                 ]),
             ]);
     }

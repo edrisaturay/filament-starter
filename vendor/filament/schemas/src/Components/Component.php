@@ -111,9 +111,7 @@ class Component extends ViewComponent
         }
 
         return match ($parameterType) {
-            Get::class => [$this->makeGetUtility()],
             Model::class, $record::class => [$record],
-            Set::class => [$this->makeSetUtility()],
             default => parent::resolveDefaultClosureDependencyForEvaluationByType($parameterType),
         };
     }
@@ -179,6 +177,7 @@ class Component extends ViewComponent
             ], escape: false)
             ->class([
                 ($maxWidth instanceof Width) ? "fi-width-{$maxWidth->value}" : $maxWidth,
+                'fi-growable' => $container->isInline() && $this->canGrow(default: false),
             ]);
 
         ob_start(); ?>
@@ -195,7 +194,7 @@ class Component extends ViewComponent
                 })"
                 <?php if ($afterStateUpdatedJs = $this->getAfterStateUpdatedJs()) { ?>
                     x-init="<?= implode(';', array_map(
-                        fn (string $js): string => '$wire.watch(' . Js::from($statePath) . ', ($state, $old) => isStateChanged($state, $old) && eval(' . Js::from($js) . '))',
+                        fn (string $js): string => '$wire; $wire.watch(' . Js::from($statePath) . ', ($state, $old) => isStateChanged($state, $old) && eval(' . Js::from($js) . '))',
                         $afterStateUpdatedJs,
                     )) ?>"
                 <?php } ?>

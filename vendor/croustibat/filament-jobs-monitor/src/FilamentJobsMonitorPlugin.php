@@ -6,6 +6,7 @@ use Closure;
 use Filament\Contracts\Plugin;
 use Filament\Panel;
 use Filament\Support\Concerns\EvaluatesClosures;
+use UnitEnum;
 
 class FilamentJobsMonitorPlugin implements Plugin
 {
@@ -34,7 +35,7 @@ class FilamentJobsMonitorPlugin implements Plugin
     /**
      * The resource navigation group.
      */
-    protected string|Closure|null $navigationGroup = null;
+    protected string|UnitEnum|Closure|null $navigationGroup = null;
 
     /**
      * The resource navigation icon.
@@ -173,7 +174,7 @@ class FilamentJobsMonitorPlugin implements Plugin
     /**
      * Get the resource navigation group.
      */
-    public function getNavigationGroup(): ?string
+    public function getNavigationGroup(): null|string|UnitEnum
     {
         return $this->evaluate($this->navigationGroup) ?? config('filament-jobs-monitor.resources.navigation_group');
     }
@@ -181,7 +182,7 @@ class FilamentJobsMonitorPlugin implements Plugin
     /**
      * Set the resource navigation group.
      */
-    public function navigationGroup(string|Closure $navigationGroup): static
+    public function navigationGroup(string|UnitEnum|Closure $navigationGroup): static
     {
         $this->navigationGroup = $navigationGroup;
 

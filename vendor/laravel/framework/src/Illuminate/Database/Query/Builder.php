@@ -3,8 +3,8 @@
 namespace Illuminate\Database\Query;
 
 use BackedEnum;
-use Carbon\CarbonPeriod;
 use Closure;
+use DatePeriod;
 use DateTimeInterface;
 use Illuminate\Contracts\Database\Query\Builder as BuilderContract;
 use Illuminate\Contracts\Database\Query\ConditionExpression;
@@ -220,6 +220,13 @@ class Builder implements BuilderContract
     public $lock;
 
     /**
+     * The query execution timeout in seconds.
+     *
+     * @var int|null
+     */
+    public $timeout;
+
+    /**
      * The callbacks that should be invoked before the query is executed.
      *
      * @var array
@@ -292,8 +299,6 @@ class Builder implements BuilderContract
         foreach ($columns as $as => $column) {
             if (is_string($as) && $this->isQueryable($column)) {
                 $this->selectSub($column, $as);
-            } elseif (is_string($as) && $this->grammar->isExpression($column)) {
-                $this->selectExpression($column, $as);
             } else {
                 $this->columns[] = $column;
             }
@@ -323,14 +328,14 @@ class Builder implements BuilderContract
     /**
      * Add a select expression to the query.
      *
-     * @param  \Illuminate\Contracts\Database\Query\Expression  $expression
+     * @param  \Illuminate\Contracts\Database\Query\Expression|string  $expression
      * @param  string  $as
      * @return $this
      */
     public function selectExpression($expression, $as)
     {
         return $this->selectRaw(
-            '('.$expression->getValue($this->grammar).') as '.$this->grammar->wrap($as)
+            '('.$this->grammar->getValue($expression).') as '.$this->grammar->wrap($as)
         );
     }
 
@@ -463,8 +468,6 @@ class Builder implements BuilderContract
                 }
 
                 $this->selectSub($column, $as);
-            } elseif (is_string($as) && $this->grammar->isExpression($column)) {
-                $this->selectExpression($column, $as);
             } else {
                 if (is_array($this->columns) && in_array($column, $this->columns, true)) {
                     continue;
@@ -955,6 +958,10 @@ class Builder implements BuilderContract
             $type = 'Bitwise';
         }
 
+        if ($operator === '<=>') {
+            $type = 'NullSafeEquals';
+        }
+
         // Now that we are working with just a simple query we can put the elements
         // in our array and add the query binding to our array of bindings that
         // will be bound to each SQL statements when it is finally executed.
@@ -1314,6 +1321,39 @@ class Builder implements BuilderContract
     }
 
     /**
+     * Add a "where null safe equals" clause to the query.
+     *
+     * @param  \Illuminate\Contracts\Database\Query\Expression|string  $column
+     * @param  mixed  $value
+     * @param  string  $boolean
+     * @return $this
+     */
+    public function whereNullSafeEquals($column, $value, $boolean = 'and')
+    {
+        $type = 'NullSafeEquals';
+
+        $this->wheres[] = compact('type', 'column', 'value', 'boolean');
+
+        if (! $value instanceof ExpressionContract) {
+            $this->addBinding($this->flattenValue($value), 'where');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Add an "or where null safe equals" clause to the query.
+     *
+     * @param  \Illuminate\Contracts\Database\Query\Expression|string  $column
+     * @param  mixed  $value
+     * @return $this
+     */
+    public function orWhereNullSafeEquals($column, $value)
+    {
+        return $this->whereNullSafeEquals($column, $value, 'or');
+    }
+
+    /**
      * Add a "where in" clause to the query.
      *
      * @param  \Illuminate\Contracts\Database\Query\Expression|string  $column
@@ -1521,8 +1561,8 @@ class Builder implements BuilderContract
                 ->whereBetween(new Expression('('.$sub.')'), $values, $boolean, $not);
         }
 
-        if ($values instanceof CarbonPeriod) {
-            $values = [$values->getStartDate(), $values->getEndDate()];
+        if ($values instanceof DatePeriod) {
+            $values = $this->resolveDatePeriodBounds($values);
         }
 
         $this->wheres[] = compact('type', 'column', 'values', 'boolean', 'not');
@@ -1543,6 +1583,13 @@ class Builder implements BuilderContract
     public function whereBetweenColumns($column, array $values, $boolean = 'and', $not = false)
     {
         $type = 'betweenColumns';
+
+        if ($this->isQueryable($column)) {
+            [$sub, $bindings] = $this->createSub($column);
+
+            return $this->addBinding($bindings, 'where')
+                ->whereBetweenColumns(new Expression('('.$sub.')'), $values, $boolean, $not);
+        }
 
         $this->wheres[] = compact('type', 'column', 'values', 'boolean', 'not');
 
@@ -2759,8 +2806,8 @@ class Builder implements BuilderContract
     {
         $type = 'between';
 
-        if ($values instanceof CarbonPeriod) {
-            $values = [$values->getStartDate(), $values->getEndDate()];
+        if ($values instanceof DatePeriod) {
+            $values = $this->resolveDatePeriodBounds($values);
         }
 
         $this->havings[] = compact('type', 'column', 'values', 'boolean', 'not');
@@ -2805,6 +2852,29 @@ class Builder implements BuilderContract
     public function orHavingNotBetween($column, iterable $values)
     {
         return $this->havingBetween($column, $values, 'or', true);
+    }
+
+    /**
+     * Resolve the start and end dates from a DatePeriod.
+     *
+     * @param  \DatePeriod  $period
+     * @return array{\DateTimeInterface, \DateTimeInterface}
+     */
+    protected function resolveDatePeriodBounds(DatePeriod $period)
+    {
+        [$start, $end] = [$period->getStartDate(), $period->getEndDate()];
+
+        if ($end === null) {
+            $end = clone $start;
+
+            $recurrences = $period->getRecurrences();
+
+            for ($i = 0; $i < $recurrences; $i++) {
+                $end = $end->add($period->getDateInterval());
+            }
+        }
+
+        return [$start, $end];
     }
 
     /**
@@ -2944,6 +3014,36 @@ class Builder implements BuilderContract
     public function inRandomOrder($seed = '')
     {
         return $this->orderByRaw($this->grammar->compileRandom($seed));
+    }
+
+    /**
+     * Add an "order by" clause to order results by a given sequence of values.
+     *
+     * @param  \Illuminate\Contracts\Database\Query\Expression|string  $column
+     * @param  \Illuminate\Contracts\Support\Arrayable|array  $values
+     * @return $this
+     */
+    public function inOrderOf($column, $values)
+    {
+        if ($values instanceof Arrayable) {
+            $values = $values->toArray();
+        }
+
+        $values = array_values($values);
+
+        if (empty($values)) {
+            return $this;
+        }
+
+        $this->{$this->unions ? 'unionOrders' : 'orders'}[] = [
+            'type' => 'InOrderOf',
+            'column' => $column,
+            'values' => $values,
+        ];
+
+        $this->addBinding($this->cleanBindings($values), $this->unions ? 'unionOrder' : 'order');
+
+        return $this;
     }
 
     /**
@@ -3202,6 +3302,25 @@ class Builder implements BuilderContract
     public function sharedLock()
     {
         return $this->lock(false);
+    }
+
+    /**
+     * Set a query execution timeout in seconds.
+     *
+     * @param  int|null  $seconds
+     * @return $this
+     *
+     * @throws InvalidArgumentException
+     */
+    public function timeout(?int $seconds): static
+    {
+        if ($seconds !== null && $seconds <= 0) {
+            throw new InvalidArgumentException('Timeout must be greater than zero.');
+        }
+
+        $this->timeout = $seconds;
+
+        return $this;
     }
 
     /**
@@ -4097,7 +4216,7 @@ class Builder implements BuilderContract
         $this->applyBeforeQueryCallbacks();
 
         $values = (new Collection($values))->map(function ($value) {
-            if (! $value instanceof Builder) {
+            if (! $value instanceof self && ! $value instanceof EloquentBuilder && ! $value instanceof Relation) {
                 return ['value' => $value, 'bindings' => match (true) {
                     $value instanceof Collection => $value->all(),
                     $value instanceof UnitEnum => enum_value($value),
@@ -4489,11 +4608,7 @@ class Builder implements BuilderContract
      */
     public function castBinding($value)
     {
-        if ($value instanceof UnitEnum) {
-            return enum_value($value);
-        }
-
-        return $value;
+        return enum_value($value);
     }
 
     /**

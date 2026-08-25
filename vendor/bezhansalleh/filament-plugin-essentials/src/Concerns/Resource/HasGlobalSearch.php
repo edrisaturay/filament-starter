@@ -8,12 +8,23 @@ trait HasGlobalSearch
 {
     use DelegatesToPlugin;
 
+    public static function isGloballySearchable(): bool
+    {
+        $pluginResult = static::delegateToPlugin(
+            'HasGlobalSearch',
+            'isGloballySearchable'
+        );
+
+        return static::isNoPluginResult($pluginResult)
+            ? static::getParentResult('isGloballySearchable')
+            : (bool) $pluginResult;
+    }
+
     public static function canGloballySearch(): bool
     {
         $pluginResult = static::delegateToPlugin(
             'HasGlobalSearch',
-            'canGloballySearch',
-            null
+            'canGloballySearch'
         );
 
         return static::isNoPluginResult($pluginResult)
@@ -25,8 +36,7 @@ trait HasGlobalSearch
     {
         $pluginResult = static::delegateToPlugin(
             'HasGlobalSearch',
-            'getGlobalSearchResultsLimit',
-            null
+            'getGlobalSearchResultsLimit'
         );
 
         return static::isNoPluginResult($pluginResult)
@@ -38,8 +48,7 @@ trait HasGlobalSearch
     {
         $pluginResult = static::delegateToPlugin(
             'HasGlobalSearch',
-            'isGlobalSearchForcedCaseInsensitive',
-            null
+            'isGlobalSearchForcedCaseInsensitive'
         );
 
         return static::isNoPluginResult($pluginResult)
@@ -51,8 +60,7 @@ trait HasGlobalSearch
     {
         $pluginResult = static::delegateToPlugin(
             'HasGlobalSearch',
-            'shouldSplitGlobalSearchTerms',
-            null
+            'shouldSplitGlobalSearchTerms'
         );
 
         return static::isNoPluginResult($pluginResult)

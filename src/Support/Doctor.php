@@ -72,7 +72,9 @@ class Doctor
         // Check Filament Email setup
         $results = array_merge($results, $this->checkFilamentEmailSetup());
 
-        // Check Advanced Tables (Filter Sets) setup
+        // Check Filter Sets setup
+        $results = array_merge($results, $this->checkFilterSetsSetup());
+
         // Check Spatie Health setup
         $results = array_merge($results, $this->checkHealthSetup());
 
@@ -310,6 +312,12 @@ class Doctor
         return \Illuminate\Support\Facades\Schema::hasTable('filament_email_log');
     }
 
+    protected function hasFilterSetsTables(): bool
+    {
+        return \Illuminate\Support\Facades\Schema::hasTable('filament_filter_sets')
+            && \Illuminate\Support\Facades\Schema::hasTable('filament_filter_set_user');
+    }
+
     protected function hasHealthTables(): bool
     {
         return \Illuminate\Support\Facades\Schema::hasTable('health_check_result_history_items');
@@ -386,6 +394,32 @@ class Doctor
             'check' => 'Filament Email Migration',
             'status' => 'ok',
             'message' => 'Filament Email migrations are installed.',
+        ]];
+    }
+
+    /**
+     * Check that Filter Sets migrations are installed when enabled.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    protected function checkFilterSetsSetup(): array
+    {
+        if (! $this->isPluginEnabled('filter-sets')) {
+            return [];
+        }
+
+        if (! $this->hasFilterSetsTables()) {
+            return [[
+                'check' => 'Filter Sets Migration',
+                'status' => 'critical',
+                'message' => "Filter Sets tables are missing. Run 'php artisan migrate'.",
+            ]];
+        }
+
+        return [[
+            'check' => 'Filter Sets Migration',
+            'status' => 'ok',
+            'message' => 'Filter Sets migrations are installed.',
         ]];
     }
 

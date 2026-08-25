@@ -12,11 +12,10 @@ trait BelongsToParent
     {
         $pluginResult = static::delegateToPlugin(
             'BelongsToParent',
-            'getParentResource',
-            null
+            'getParentResource'
         );
 
-        if (! static::isNoPluginResult($pluginResult)) {
+        if (! static::isNoPluginResult($pluginResult) && $pluginResult !== null) {
             return $pluginResult;
         }
 
