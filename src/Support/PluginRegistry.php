@@ -178,16 +178,6 @@ class PluginRegistry
                 'class' => 'Cheesegrits\FilamentPhoneNumbers\FilamentPhoneNumbersServiceProvider',
                 'package' => 'cheesegrits/filament-phone-numbers',
             ],
-            'statefusion' => [
-                'label' => 'Statefusion',
-                'installer' => fn (Panel $panel, array $options) => $panel, // Registered as package in composer
-                'default_enabled' => true,
-                'dangerous_to_disable' => false,
-                'requires_migrations' => false,
-                'default_options' => [],
-                'class' => 'A909m\FilamentStatefusion\FilamentStatefusionServiceProvider',
-                'package' => 'a909m/filament-statefusion',
-            ],
             'filament-activity-log' => [
                 'label' => 'Activity Log',
                 'installer' => fn (Panel $panel, array $options) => $panel->plugin(ActivityLogPlugin::make()),

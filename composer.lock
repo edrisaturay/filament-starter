@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d31a7205285a8b1784ebcb5e6baf0f66",
+    "content-hash": "b5a2a4c82126bb5450fec9ecb8f6a5b5",
     "packages": [
         {
             "name": "a909m/filament-statefusion",
@@ -2273,10 +2273,9 @@
             "dist": {
                 "type": "path",
                 "url": "../filament-utilities",
-                "reference": "cd7ae6bd6bf6c9fa621829e789ca32ff7eedda5f"
+                "reference": "18b6820fd415752093cbdd136bd798514844405c"
             },
             "require": {
-                "a909m/filament-statefusion": "^2.3",
                 "cheesegrits/filament-phone-numbers": "^2.1",
                 "cocosmos/filament-quick-add-select": "^1.0",
                 "filament/filament": "^5.0",
@@ -13346,12 +13345,12 @@
             "version": "v5.6.3",
             "source": {
                 "type": "git",
-                "url": "https://github.com/vlucas/phpdotenv.git",
+                "url": "https://github.com/phpdotenv/phpdotenv.git",
                 "reference": "955e7815d677a3eaa7075231212f2110983adecc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/vlucas/phpdotenv/zipball/955e7815d677a3eaa7075231212f2110983adecc",
+                "url": "https://api.github.com/repos/phpdotenv/phpdotenv/zipball/955e7815d677a3eaa7075231212f2110983adecc",
                 "reference": "955e7815d677a3eaa7075231212f2110983adecc",
                 "shasum": ""
             },

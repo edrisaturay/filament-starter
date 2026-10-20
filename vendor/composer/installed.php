@@ -3,7 +3,7 @@
         'name' => 'edrisaturay/filament-starter',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => 'df9a85d88ee4506adb84d8c706833f67afde196c',
+        'reference' => '05488a5f4de7135253d39bd87518390962717f7f',
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -301,7 +301,7 @@
         'edrisaturay/filament-starter' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => 'df9a85d88ee4506adb84d8c706833f67afde196c',
+            'reference' => '05488a5f4de7135253d39bd87518390962717f7f',
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
@@ -310,7 +310,7 @@
         'edrisaturay/filament-utilities' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => 'cd7ae6bd6bf6c9fa621829e789ca32ff7eedda5f',
+            'reference' => '18b6820fd415752093cbdd136bd798514844405c',
             'type' => 'library',
             'install_path' => __DIR__ . '/../edrisaturay/filament-utilities',
             'aliases' => array(),
